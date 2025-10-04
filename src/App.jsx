@@ -4,6 +4,7 @@ import Pokedex from "./pages/Pokedex";
 import Region from "./pages/Region";
 import ShowRegionPokemon from "./pages/ShowRegionPokemon";
 import Stadium from "./pages/Stadium/Stadium";
+import { Navigate } from "react-router-dom";
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +51,7 @@ const App = () => {
       </nav>
 
       {/* Page Content */}
-      <main className="p-6 max-w-6xl mx-auto">
+      <main className="max-w-6xl mx-auto">
         <Routes>
           <Route 
             path="/" 
@@ -80,7 +81,11 @@ const App = () => {
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/region" element={<Region />} />
           <Route path="/region/:regionName" element={<ShowRegionPokemon />} />
-          <Route path="/stadium/*" element={<Stadium />} />  
+
+          {/* If Stadium has no nested routes, just use: */}
+          <Route path="/stadium" element={<Stadium />} />
+          {/* Catch-all for unknown routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </Router>

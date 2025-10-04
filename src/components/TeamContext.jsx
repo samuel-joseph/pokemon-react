@@ -23,7 +23,6 @@ export const TeamProvider = ({ children }) => {
   }
 
   const removeTeam = (pokemon) => {
-    console.log(pokemon)
     setTeam(team.filter(p => p.id !== pokemon.id));
     addInventory(pokemon)
   }
@@ -33,19 +32,49 @@ export const TeamProvider = ({ children }) => {
   };
 
   const addNpcTeam = (pokemon) => {
-    setNpcTeam([...npcTeam],pokemon)
-  }
+    if (npcTeam < 3) {
 
-  const removeNpcTeam = (pokemon) => {
-    setNpcTeam(team.filter(p => p.id !== pokemon.id));
-    addNpcTeam(pokemon);
-  }
+      // Add to npcTeam
+      setNpcTeam((prev) => [...prev, pokemon]);
+
+      // Remove from npc.gymLeaders[0].pokemon
+      setNpc((prevNpc) => {
+        if (!prevNpc || !prevNpc.gymLeaders) return prevNpc;
+
+        // Make a deep copy
+        const updatedNpc = { ...prevNpc };
+        updatedNpc.gymLeaders = updatedNpc.gymLeaders.map((leader, index) => {
+          if (index === 0) { // assuming first leader is the one we're taking from
+            return {
+              ...leader,
+              pokemon: leader.pokemon.filter((p) => p.id !== pokemon.id),
+            };
+          }
+          return leader;
+        });
+
+        return updatedNpc;
+      });
+    }
+  };
+
+const removeNpcTeam = (pokemon) => {
+  setNpcTeam(prev => prev.filter(p => p.id !== pokemon.id));
+  // if you want to put it back to the original leader pool:
+  setNpc(prev => {
+    const copy = { ...prev };
+    copy.gymLeaders[0].pokemon.push(pokemon);
+    return copy;
+  });
+};
 
   return (
     <TeamContext.Provider value={{
       region,
       setRegion,
       inventory,
+      setInventory,
+      setTeam,
       team,
       addTeam,
       addInventory,
@@ -54,6 +83,7 @@ export const TeamProvider = ({ children }) => {
       setNpc,
       npcTeam,
       setNpcTeam,
+      addNpcTeam,
       removeTeam,
       removeNpcTeam
     }}>

@@ -3,7 +3,7 @@ import { useTeam } from "./TeamContext";
 import { useNavigate } from "react-router-dom";
 import pokeball from "../assets/pokeball.png";
 
-const TeamSelection = () => {
+const TeamSelection = ({ onNext}) => {
   const navigate = useNavigate();
   const {
     inventory,
@@ -13,7 +13,8 @@ const TeamSelection = () => {
     removeTeam,
     region,
     npc,
-    setNpcTeam
+    addNpcTeam,
+    npcTeam
   } = useTeam();
 
   const [allowChanges, setAllowChanges] = useState(false);
@@ -28,12 +29,34 @@ const TeamSelection = () => {
 
   useEffect(() => {
     if (team.length === 3) {
-      setTimeout(() => {
-        console.log("YES!")
-        setNpcTeam()
-      }, 3000)
+      const timer = setTimeout(() => {
+        // move to next stage
+        onNext();
+
+        // copy NPC array safely
+        const leader = npc.gymLeaders[0];
+        const npcPokemon = [...leader.pokemon];
+
+        // grab final boss (last one)
+        const finalBoss = npcPokemon.pop();
+
+        // randomly add NPCs until 4 slots are filled
+        while (npcPokemon.length > 3) {
+          const randomIndex = Math.floor(Math.random() * npcPokemon.length);
+          const chosen = npcPokemon.splice(randomIndex, 1)[0]; // remove from list
+          addNpcTeam(chosen);
+        }
+
+        // finally add boss
+        if (finalBoss) {
+          addNpcTeam(finalBoss);
+        }
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
-  })
+  }, [team, npc, onNext, addNpcTeam]);
+
 
   // Ask if user wants to make changes when team is full
   useEffect(() => {
