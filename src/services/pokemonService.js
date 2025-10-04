@@ -7,7 +7,6 @@ export async function fetchRegionPokemons(region) {
     throw new Error("Failed to fetch Pokémons for the specified region");
   }
   const data = await response.json();
-  console.log("What is response in service? ", data);
   return data.pokemons;
 }
 

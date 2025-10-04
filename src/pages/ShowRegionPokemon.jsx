@@ -10,7 +10,7 @@ function ShowRegionPokemon() {
   const [pokemon, setPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const { team, addPokemon, setRegion, setNpc, npc } = useTeam();
+  const { inventory, addInventory, setRegion, setNpc, npc } = useTeam();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +20,6 @@ function ShowRegionPokemon() {
         const pokemons = await fetchRegionPokemons(regionName);
         const npc = await fetchNpc(regionName);
         setNpc(npc);
-        console.log(npc)
         setPokemon(pokemons);
       } catch (error) {
         console.error("Error fetching Pokémons:", error);
@@ -33,14 +32,13 @@ function ShowRegionPokemon() {
 
   // filter out Pokémon already in the team
   const availablePokemon = pokemon.filter(
-    (poke) => !team.some((t) => t.id === poke.id)
+    (poke) => !inventory.some((t) => t.id === poke.id)
   );
 
   const handleAddPokemon = (poke) => {
-    addPokemon(poke);
-    console.log(npc)
+    addInventory(poke);
     // use new length instead of team.length
-    const newTeamLength = team.length + 1;
+    const newTeamLength = inventory.length + 1;
     setSelectedPokemon(null);
 
     if (newTeamLength >= 6) {
