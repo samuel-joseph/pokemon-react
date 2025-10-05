@@ -7,12 +7,22 @@ import { motion } from "framer-motion";
 const Battle = () => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
-  const [currentPokemon, setCurrentPokemon] = useState(null);
-  const [currentNpc, setCurrentNpc] = useState(null);
+  // const [currentPokemon, setCurrentPokemon] = useState(null);
+  // const [currentNpc, setCurrentNpc] = useState(null);
   const [movesEnabled, setMovesEnabled] = useState(true);
   const [npcAttacking, setNpcAttacking] = useState(false);
-
   const [isTeamHit, setIsTeamHit] = useState(false);
+  const [allowSwap, setAllowSwap] = useState(true);
+
+  let currentPokemon = team[0];
+  let reserve = team.slice(1);
+  let currentNpc = npcTeam[0];
+  let reserveNpc = npcTeam.slice(1);
+
+  const HIDE_MOVE_TIMER = 3000;
+
+  // helper wait function (returns a promise)
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   // Initialize current Pokémon and remove from arrays
   useEffect(() => {
@@ -32,20 +42,23 @@ const Battle = () => {
   if (!currentPokemon || !currentNpc) return <p>Loading battle...</p>;
 
   // Swap current Pokémon
-  const handleSwapPokemon = (selectedPokemon, idx) => {
-    setMovesEnabled(false); // hide moves while swapping
-    const newTeam = [...team];
-    newTeam[idx] = currentPokemon; // put currentPokemon back
-    setCurrentPokemon(selectedPokemon);
-    setTeam(newTeam);
+  const handleSwapPokemon = async (idx) => {
+    setAllowSwap(false);
+  setMovesEnabled(false);
 
-  // Animate NPC attack after swap
-  const npcAttackDelay = 500; // time before NPC attacks
-  const reenableMovesDelay = 3000; // time to re-enable moves
+  setTeam((prev) => {
+    const newTeam = [...prev];
+    [newTeam[0], newTeam[idx + 1]] = [newTeam[idx + 1], newTeam[0]];
+    return newTeam;
+  });
 
-  setTimeout(() => handleNpcAttack(), npcAttackDelay);
-  setTimeout(() => setMovesEnabled(true), reenableMovesDelay);
-  };
+  await wait(3000);
+  await handleNpcAttack();
+
+  await wait(HIDE_MOVE_TIMER);
+  setMovesEnabled(true);
+};
+
 
   // Calculate type effectiveness
   const getEffectiveness = (moveType, targetTypes) =>
@@ -70,41 +83,41 @@ const Battle = () => {
     return bestMove;
   };
 
-
   const handleNpcAttack = async () => {
     if (!currentNpc || !currentPokemon) return;
     setNpcAttacking(true);
 
     // NPC attack animation (move forward)
-    await new Promise((resolve) => setTimeout(resolve, 500)); // attack duration
+    await wait(500);
 
     // Flicker effect for currentPokemon
     setIsTeamHit(true);
-    setTimeout(() => setIsTeamHit(false), 500); // flicker lasts 0.5s
+    await wait(500);
+    setIsTeamHit(false);
 
     // Calculate damage
     const npcMove = chooseNpcMove(currentNpc, currentPokemon);
-    if (!npcMove) return;
+    if (!npcMove) {
+      setNpcAttacking(false);
+      return;
+    }
 
     const damage = npcMove.power * (Math.random() * 0.15 + 0.925);
     const newHP = Math.max(currentPokemon.currentHP - damage, 0);
 
-      if (newHP <= 0) {
-    // Pokémon fainted
-    setInventory((prev) => [...prev, currentPokemon]); // push to inventory
-    if (team.length > 0) {
-      // Let player pick the next Pokémon
-      setCurrentPokemon(null); // current Pokémon is gone until player selects
+    if (newHP <= 0) {
+      // Current Pokémon faints
+      setInventory((prev) => [...prev, currentPokemon]);
+      setTeam((prev) => prev.slice(1)); // remove fainted
+      setAllowSwap(true);
     } else {
-      setCurrentPokemon(null); // no Pokémon left; battle ends or pause
+      // Update HP for active Pokémon
+      setTeam((prev) => {
+        const newTeam = [...prev];
+        newTeam[0] = { ...newTeam[0], currentHP: newHP };
+        return newTeam;
+      });
     }
-  } else {
-    // Update HP normally
-    setCurrentPokemon((prev) => ({ ...prev, currentHP: newHP }));
-    setTeam((prev) =>
-      prev.map((p) => (p.id === currentPokemon.id ? { ...p, currentHP: newHP } : p))
-    );
-  }
 
     setNpcAttacking(false);
   };
@@ -113,7 +126,7 @@ const Battle = () => {
     <div className="flex flex-col h-screen bg-gradient-to-b relative">
       {/* NPC Team Icons */}
       <div className="absolute top-4 left-4 flex space-x-2">
-        {npcTeam.map((poke, idx) => (
+        {reserveNpc.map((poke, idx) => (
           <img key={idx} src={pokeball} alt={poke.name} className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
         ))}
       </div>
@@ -135,17 +148,10 @@ const Battle = () => {
           src={currentNpc.sprite_front}
           alt={currentNpc.name}
           className="w-32 h-32 object-contain sm:w-40 sm:h-40 ml-8"
-          animate={npcAttacking ? { x: -50, y:50 } : { x: 0 }} // move left when attacking
+          animate={npcAttacking ? { x: -50, y: 50 } : { x: 0 }}
           transition={{ duration: 0.5, yoyo: 1 }}
-          onAnimationComplete={()=>handleNpcAttack}
+          onAnimationComplete={() => handleNpcAttack}
         />
-
-{/*         
-        <img
-          src={currentNpc.sprite_front}
-          alt={currentNpc.name}
-          className="w-32 h-32 object-contain sm:w-40 sm:h-40"
-        /> */}
       </div>
 
       {/* Bottom Half: Player */}
@@ -181,17 +187,19 @@ const Battle = () => {
         </div>
 
         {/* Player Team Icons */}
-        <div className="flex space-x-2 mb-4">
-          {team.map((poke, idx) => (
+        {allowSwap &&
+        <div className={`flex space-x-2 mb-4`}>
+          {reserve.map((poke, idx) => (
             <img
               key={idx}
               src={poke.image}
               alt={poke.name}
               className="w-8 h-8 sm:w-10 sm:h-10 cursor-pointer"
-              onClick={() => movesEnabled && handleSwapPokemon(poke, idx)}
+              onClick={() => movesEnabled && handleSwapPokemon(idx)}
             />
           ))}
-        </div>
+          </div>
+        }
       </div>
     </div>
   );
