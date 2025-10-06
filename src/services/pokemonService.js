@@ -1,7 +1,9 @@
+const API_URL = `https://pokemon-api-w3cz.onrender.com`;
+
 export async function fetchRegionPokemons(region) {
   const response = await fetch(
     // `https://pokemon-api-w3cz.onrender.com/api/region/${region}`
-    `http://localhost:3000/api/region/${region}`
+    `${API_URL}/api/region/${region}`
   );
   if (!response.ok) {
     throw new Error("Failed to fetch Pokémons for the specified region");
@@ -11,7 +13,7 @@ export async function fetchRegionPokemons(region) {
 }
 
 export async function fetchPokemons() {
-  const response = await fetch("http://localhost:3000/api/pokemon");
+  const response = await fetch(`${API_URL}/api/pokemon`);
   if (!response.ok) {
     throw new Error("Failed to fetch Pokémons");
   }
@@ -21,7 +23,7 @@ export async function fetchPokemons() {
 
 // Fetch all NPCs
 export async function fetchAllNpc() {
-  const response = await fetch(`http://localhost:3000/api/npc`);
+  const response = await fetch(`${API_URL}/api/npc`);
   if (!response.ok) {
     throw new Error("Failed to fetch NPCs");
   }
@@ -31,7 +33,7 @@ export async function fetchAllNpc() {
 
 // Fetch a single NPC by ID or name
 export async function fetchNpc(id) {
-  const response = await fetch(`http://localhost:3000/api/npc/${id}`);
+  const response = await fetch(`${API_URL}/api/npc/${id}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch NPC with id ${id}`);
   }
