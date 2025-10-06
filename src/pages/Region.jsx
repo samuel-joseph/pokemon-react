@@ -1,19 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const regions = [
-  "Kanto",
-  "Johto",
-  "Hoenn",
-  "Sinnoh",
-  "Unova",
-  "Kalos",
-  "Alola",
-  "Galar"
-];
+import { useTeam } from "../components/TeamContext";
+import { regions } from "../helper/region";
 
 function Region() {
   const navigate = useNavigate();
+  const { trophies } = useTeam();
   const [activeRegion, setActiveRegion] = useState(null);
 
   const handleRegionClick = (region) => {
@@ -27,7 +19,7 @@ function Region() {
       </h1>
 
       <div className="flex flex-col justify-center w-1/2 gap-4">
-        {regions.map((region) => (
+        {regions.slice(0, trophies+1).map((region) => (
           <button
             key={region}
             onClick={() => handleRegionClick(region)}

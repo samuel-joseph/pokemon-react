@@ -8,6 +8,7 @@ export const TeamProvider = ({ children }) => {
   const [npc, setNpc] = useState([]);
   const [npcTeam, setNpcTeam] = useState([]);
   const [region, setRegion] = useState('');
+  const [trophies, setTrophies] = useState(0);
 
   const addInventory = (pokemon) => {
     if (inventory.length < 6 && !inventory.some(p => p.id === pokemon.id)) {
@@ -67,6 +68,8 @@ const removeNpcTeam = (pokemon) => {
     return copy;
   });
 };
+  
+const addTrophy = () => setTrophies(prev => prev + 1);
 
   return (
     <TeamContext.Provider value={{
@@ -85,7 +88,9 @@ const removeNpcTeam = (pokemon) => {
       setNpcTeam,
       addNpcTeam,
       removeTeam,
-      removeNpcTeam
+      removeNpcTeam,
+      addTrophy,
+      trophies
     }}>
       {children}
     </TeamContext.Provider>

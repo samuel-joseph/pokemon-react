@@ -12,8 +12,10 @@ function ShowRegionPokemon() {
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const { inventory, addInventory, setRegion, setNpc, npc } = useTeam();
   const navigate = useNavigate();
+  const { setInventory } = useTeam();
 
   useEffect(() => {
+    setInventory([]);
     async function fetchData() {
       setLoading(true);
       try {
