@@ -1,10 +1,8 @@
-const API_URL = `https://pokemon-api-w3cz.onrender.com`;
+const API_URL = process.env.API_URL;
+// const API_URL = "http://localhost:3000";
 
 export async function fetchRegionPokemons(region) {
-  const response = await fetch(
-    // `https://pokemon-api-w3cz.onrender.com/api/region/${region}`
-    `${API_URL}/api/region/${region}`
-  );
+  const response = await fetch(`${API_URL}/api/region/${region}`);
   if (!response.ok) {
     throw new Error("Failed to fetch Pokémons for the specified region");
   }

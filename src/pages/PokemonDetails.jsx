@@ -55,6 +55,7 @@ const PokemonDetails = ({ pokemon, onBack, onAdd }) => {
           onClick={() => setShowMoves(true)}
         >
           <h2 className="text-xl font-semibold mb-4">Stats</h2>
+          <p className="mt-3 text-sm text-gray-500 italic">Click to view moves</p>
           <ul className="space-y-3">
             {pokemon.stats?.map((stat, index) => {
               const percentage = Math.min((stat.base / 255) * 100, 100);
@@ -75,7 +76,6 @@ const PokemonDetails = ({ pokemon, onBack, onAdd }) => {
               );
             })}
           </ul>
-          <p className="mt-3 text-sm text-gray-500 italic">Click to view moves</p>
         </div>
       ) : (
         <div
@@ -83,6 +83,7 @@ const PokemonDetails = ({ pokemon, onBack, onAdd }) => {
           onClick={() => setShowMoves(false)}
         >
           <h2 className="text-xl font-semibold mb-4">Moves</h2>
+          <p className="mt-3 text-sm text-gray-500 italic">Click to view stats</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {pokemon.moves?.map((move, index) => (
               <li
@@ -116,7 +117,6 @@ const PokemonDetails = ({ pokemon, onBack, onAdd }) => {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-sm text-gray-500 italic">Click to view stats</p>
         </div>
       )}
     </div>
