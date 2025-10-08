@@ -97,8 +97,8 @@ const TeamSelection = ({ onNext}) => {
                 <button
                   className="mt-2 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm transition"
                   onClick={(e) => {
-                    e.stopPropagation(); // prevent parent click
-                    removeInventory(poke);
+                    e.stopPropagation(); 
+                    removeInventory(poke.id);
                   }}
                 >
                   Remove
