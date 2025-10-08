@@ -1,20 +1,23 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchRegionPokemons, fetchNpc } from "../services/pokemonService";
 import PokemonDetails from "./PokemonDetails";
 import { useTeam } from "../components/TeamContext";
-import { useNavigate } from "react-router-dom";
 
 function ShowRegionPokemon() {
   const { regionName } = useParams();
   const [pokemon, setPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const { inventory, addInventory, setRegion, setNpc, npc } = useTeam();
+  const [playerNameInput, setPlayerNameInput] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
+
+  const { inventory, addInventory, setRegion, setNpc, npc, setInventory, name, setName } = useTeam();
   const navigate = useNavigate();
-  const { setInventory } = useTeam();
 
   useEffect(() => {
+    if (!name || name.trim() === "" || showInstructions) return; // wait for name and skip while instructions showing
+
     setInventory([]);
     async function fetchData() {
       setLoading(true);
@@ -30,16 +33,14 @@ function ShowRegionPokemon() {
       setRegion(regionName);
     }
     fetchData();
-  }, [regionName]);
+  }, [regionName, name, showInstructions]);
 
-  // filter out Pokémon already in the team
   const availablePokemon = pokemon.filter(
     (poke) => !inventory.some((t) => t.id === poke.id)
   );
 
   const handleAddPokemon = (poke) => {
     addInventory(poke);
-    // use new length instead of team.length
     const newTeamLength = inventory.length + 1;
     setSelectedPokemon(null);
 
@@ -48,17 +49,72 @@ function ShowRegionPokemon() {
     }
   };
 
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+    if (playerNameInput.trim() === "") return;
+    setName(playerNameInput.trim());
+    setShowInstructions(true); // show instruction screen next
+  };
 
+  const handleContinue = () => {
+    setShowInstructions(false);
+  };
+
+  // 1️⃣ Ask for name first
+  if (!name || name.trim() === "") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <h2 className="text-2xl font-bold text-gray-700 mb-4">Welcome, Trainer!</h2>
+        <form onSubmit={handleNameSubmit} className="flex flex-col items-center">
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={playerNameInput}
+            onChange={(e) => setPlayerNameInput(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
+          />
+          <button
+            type="submit"
+            className="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+          >
+            Start Journey
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // 2️⃣ Show instructions after name entered
+  if (showInstructions) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-50">
+        <h2 className="text-3xl font-bold text-red-600 mb-4">Welcome, {name}!</h2>
+        <p className="text-lg text-gray-700 mb-6 text-center max-w-md">
+          Before heading to the Stadium, you must first choose 6 Pokémon to form your team. 
+          Pick wisely, as each region has unique Pokémon waiting for you!
+        </p>
+        <button
+          onClick={handleContinue}
+          className="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
+  // 3️⃣ Pokémon details screen
   if (selectedPokemon) {
     return (
       <PokemonDetails
         pokemon={selectedPokemon}
-        onAdd={handleAddPokemon} // new prop
+        onAdd={handleAddPokemon}
         onBack={() => setSelectedPokemon(null)}
       />
     );
   }
 
+  // 4️⃣ Pokémon selection screen
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-center text-red-600 mb-6">

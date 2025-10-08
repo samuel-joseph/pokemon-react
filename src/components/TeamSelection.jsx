@@ -3,7 +3,7 @@ import { useTeam } from "./TeamContext";
 import { useNavigate } from "react-router-dom";
 import pokeball from "../assets/pokeball.png";
 
-const TeamSelection = ({ onNext}) => {
+const TeamSelection = ({ onNext }) => {
   const navigate = useNavigate();
   const {
     inventory,
@@ -19,6 +19,7 @@ const TeamSelection = ({ onNext}) => {
 
   const [allowChanges, setAllowChanges] = useState(false);
   const [showNpc, setShowNpc] = useState(true);
+  const [showInstruction, setShowInstruction] = useState(true); // <-- new
 
   // Redirect if team has less than 6 Pokémon
   useEffect(() => {
@@ -27,27 +28,23 @@ const TeamSelection = ({ onNext}) => {
     }
   }, [inventory, navigate, region]);
 
+  // Automatically continue to battle when 3 Pokémon are selected
   useEffect(() => {
     if (team.length === 3) {
       const timer = setTimeout(() => {
-        // move to next stage
         onNext();
 
-        // copy NPC array safely
         const leader = npc.gymLeaders[0];
         const npcPokemon = [...leader.pokemon];
-
-        // grab final boss (last one)
         const finalBoss = npcPokemon.pop();
 
         // randomly add NPCs until 4 slots are filled
         while (npcPokemon.length > 3) {
           const randomIndex = Math.floor(Math.random() * npcPokemon.length);
-          const chosen = npcPokemon.splice(randomIndex, 1)[0]; // remove from list
+          const chosen = npcPokemon.splice(randomIndex, 1)[0];
           addNpcTeam(chosen);
         }
 
-        // finally add boss
         if (finalBoss) {
           addNpcTeam(finalBoss);
         }
@@ -57,18 +54,29 @@ const TeamSelection = ({ onNext}) => {
     }
   }, [team, npc, onNext, addNpcTeam]);
 
+  // ⬇️ Instruction screen before everything loads
+  if (showInstruction) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50 px-4">
+        <h2 className="text-3xl font-bold text-blue-700 mb-4 text-center">
+          Get Ready for Battle!
+        </h2>
+        <p className="text-lg text-gray-700 mb-6 text-center max-w-md">
+          Choose <span className="font-semibold text-blue-800">3 Pokémon</span> from your team to
+          battle against the region’s Gym Leader.
+          Pick wisely — strategy and balance matter!
+        </p>
+        <button
+          onClick={() => setShowInstruction(false)}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
 
-  // Ask if user wants to make changes when team is full
-  useEffect(() => {
-    if (inventory.length === 6) {
-      const wantsChanges = window.confirm(
-        "You have selected 6 Pokémon. Do you want to make changes?"
-      );
-      setAllowChanges(wantsChanges);
-      setShowNpc(!wantsChanges);
-    }
-  }, [inventory]);
-
+  // ⬇️ Main Team Selection and NPC View
   return (
     <div className="p-4 md:p-8 bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen">
       {/* Your Team Section */}
@@ -81,7 +89,7 @@ const TeamSelection = ({ onNext}) => {
             <li
               key={poke.id}
               className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center hover:scale-105 transform transition duration-300 cursor-pointer"
-              onClick={() => {addTeam(poke)}}
+              onClick={() => addTeam(poke)}
             >
               <div className="w-20 h-20 flex items-center justify-center">
                 <img
@@ -97,7 +105,7 @@ const TeamSelection = ({ onNext}) => {
                 <button
                   className="mt-2 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm transition"
                   onClick={(e) => {
-                    e.stopPropagation(); 
+                    e.stopPropagation();
                     removeInventory(poke.id);
                   }}
                 >

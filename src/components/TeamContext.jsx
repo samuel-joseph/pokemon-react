@@ -9,7 +9,7 @@ export const TeamProvider = ({ children }) => {
   const [npcTeam, setNpcTeam] = useState([]);
   const [region, setRegion] = useState('');
   const [trophies, setTrophies] = useState(0);
-  const [name, setName] = useState("samel")
+  const [name, setName] = useState("")
 
   const addInventory = (pokemon) => {
     if (inventory.length < 6 && !inventory.some(p => p.id === pokemon.id)) {
