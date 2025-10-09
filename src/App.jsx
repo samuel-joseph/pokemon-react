@@ -5,6 +5,7 @@ import Region from "./pages/Region";
 import ShowRegionPokemon from "./pages/ShowRegionPokemon";
 import Stadium from "./pages/Stadium/Stadium";
 import { Navigate } from "react-router-dom";
+import Leaderboard from "./pages/LeaderBoard";
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +21,7 @@ const App = () => {
             <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">Home</Link>
             <Link to="/pokedex" className="hover:text-yellow-300 font-semibold transition-colors">Pokédex</Link>
             <Link to="/region" className="hover:text-yellow-300 font-semibold transition-colors">Stadium</Link>
+            <Link to="/leaderboard" className="hover:text-yellow-300 font-semibold transition-colors">Leader Board</Link>
           </div>
 
           {/* Mobile Hamburger */}
@@ -46,6 +48,7 @@ const App = () => {
             <Link to="/" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Home</Link>
             <Link to="/pokedex" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Pokédex</Link>
             <Link to="/region" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Stadium</Link>
+            <Link to="/leaderboard" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Leader Board</Link>
           </div>
         )}
       </nav>
@@ -75,12 +78,19 @@ const App = () => {
                 >
                   Go to Stadium
                 </Link>
+                <Link 
+                  to="/leaderboard" 
+                  className="mt-6 inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
+                >
+                  Leader Board
+                </Link>
               </div>
             } 
           />
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/region" element={<Region />} />
           <Route path="/region/:regionName" element={<ShowRegionPokemon />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
           {/* If Stadium has no nested routes, just use: */}
           <Route path="/stadium" element={<Stadium />} />
