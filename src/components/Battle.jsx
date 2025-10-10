@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { addNarate } from "../services/pokemonService";
 import { speak } from "../services/ttsService";
 
-import puter from "puter";
+// import puter from "puter";
 
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
