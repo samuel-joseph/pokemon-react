@@ -12,13 +12,15 @@ function ShowRegionPokemon() {
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const { inventory, addInventory, setRegion, setNpc, npc, setInventory, name, setName } = useTeam();
+  const { inventory, addInventory, setRegion, setNpc, setNpcTeam, setInventory, name, setName } = useTeam();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!name || name.trim() === "" || showInstructions) return; // wait for name and skip while instructions showing
 
     setInventory([]);
+    setNpc([]);
+    setNpcTeam([]);
     async function fetchData() {
       setLoading(true);
       try {
