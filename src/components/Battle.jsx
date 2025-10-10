@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { addNarate } from "../services/pokemonService";
 import { speak } from "../services/ttsService";
 
+import puter from "puter";
+
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
@@ -100,7 +102,10 @@ const Battle = ({ onNext }) => {
 
     const damage = calculateDamage(attacker, defenderSide, move);
     const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage.damage, 0);
-    handleNarration(
+    // handleNarration(
+    //   attacker.name, move.name, defenderSide.name, damage.effectiveness,(newHP / defenderSide?.maxHP) * 100
+    // );
+    const text = prompt(
       attacker.name, move.name, defenderSide.name, damage.effectiveness,(newHP / defenderSide?.maxHP) * 100
     );
     if (attackerIsPlayer) {
