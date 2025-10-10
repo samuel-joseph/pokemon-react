@@ -4,6 +4,7 @@ import pokeball from "../assets/pokeball.png";
 import { typeEffectiveness } from "../helper/typeEffectiveness";
 import { motion } from "framer-motion";
 import { addNarate } from "../services/pokemonService";
+import { speak } from "../services/ttsService";
 
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
@@ -28,6 +29,9 @@ const Battle = ({ onNext }) => {
   const reserveNpc = npcTeam.slice(1);
 
   const HIDE_MOVE_TIMER = 3500;
+  const INBETWEEN_HIT_TIME = 3000;
+  const POKEMON_ATTACK_TIME = 2500;
+
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   useEffect(() => { 
@@ -69,7 +73,8 @@ const Battle = ({ onNext }) => {
       hpRemaining: hpRemaining
     });
     setBattleNarration(narration.message);
-    console.log("Narration:", narration.message);
+
+    await speak(narration.message);
   }
 
   // Choose best move for NPC by expected damage
@@ -102,7 +107,8 @@ const Battle = ({ onNext }) => {
       // player attacks -> show NPC "hit" animation briefly
       // setNpcAttacking(true);
       setPlayerAttacking(true);
-      await wait(400);
+      // await wait(400);
+      await wait(POKEMON_ATTACK_TIME);
       setPlayerAttacking(false);
       // setNpcAttacking(false);
       // small delay before applying damage for smoothness
@@ -110,10 +116,10 @@ const Battle = ({ onNext }) => {
     } else {
       // npc attacks -> npc moves forward then player flicker
       setNpcAttacking(true);
-      await wait(350);
+      await wait(POKEMON_ATTACK_TIME);
       // player hit flicker
       // setIsTeamHit(true);
-      await wait(350);
+      await wait(150);
       // setIsTeamHit(false);
       setNpcAttacking(false);
     }
@@ -121,11 +127,11 @@ const Battle = ({ onNext }) => {
 
     if (attackerIsPlayer) {
       setNpcHit(true);
-      await wait(1500);
+      await wait(INBETWEEN_HIT_TIME);
       setNpcHit(false);
     } else {
       setIsTeamHit(true);
-      await wait(1500);
+      await wait(INBETWEEN_HIT_TIME);
       setIsTeamHit(false);
     }
     if (attackerIsPlayer) {
@@ -230,16 +236,18 @@ const Battle = ({ onNext }) => {
 
   // Swap Pokémon (by swapping array indices)
   const handleSwapPokemon = async (idx) => {
+    await wait(1000); // debounce
     if (!allowSwap || !movesEnabled) return;
     setAllowSwap(false);
     setMovesEnabled(false);
-
+    const previosPokemon = currentPokemon.name;
     setTeam((prev) => {
       const newTeam = [...prev];
       [newTeam[0], newTeam[idx + 1]] = [newTeam[idx + 1], newTeam[0]];
       return newTeam;
     });
-
+    const newPokemon = team[idx + 1].name;
+    await speak(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
     // NPC gets a free attack after swap
     await wait(3000);
     if (npcTeam.length > 0) {
