@@ -1,5 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL;
-// const API_URL = "http://localhost:3000";
+// const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "http://localhost:3000";
 
 export const fetchRegionPokemons = async (region) => {
   const response = await fetch(`${API_URL}/api/region/${region}`);
@@ -86,5 +86,36 @@ export const updateRecord = async ({ name, record }) => {
   } catch (err) {
     console.error("Error updating player:", err);
     throw err;
+  }
+};
+
+export const addNarate = async ({
+  attacker,
+  move,
+  defender,
+  outcome,
+  hpRemaining,
+}) => {
+  try {
+    const res = await fetch(`${API_URL}/api/ai/comentate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attacker, move, defender, outcome, hpRemaining }),
+    });
+
+    // Check for non-OK status
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to add narration");
+    }
+
+    // Parse JSON exactly once
+    const data = await res.json();
+
+    // Return the same structure as backend
+    return data; // e.g. { message: "Pidgeot unleashes a Hyper Beam..." }
+  } catch (err) {
+    console.error("Error adding narration:", err);
+    return { message: "Failed to generate narration." };
   }
 };

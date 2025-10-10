@@ -3,6 +3,7 @@ import { useTeam } from "./TeamContext";
 import pokeball from "../assets/pokeball.png";
 import { typeEffectiveness } from "../helper/typeEffectiveness";
 import { motion } from "framer-motion";
+import { addNarate } from "../services/pokemonService";
 
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
@@ -17,6 +18,8 @@ const Battle = ({ onNext }) => {
   const [playerDamage, setPlayerDamage] = useState(null);
 
   const [battleMessage, setBattleMessage] = useState("");
+
+  const [battleNarration, setBattleNarration] = useState("");
 
 
   const currentPokemon = team[0];
@@ -50,8 +53,24 @@ const Battle = ({ onNext }) => {
       1
     );
     const damage = move.power * effectiveness * (Math.random() * 0.15 + 0.925);
-    return Math.floor(damage);
+
+    return {
+      damage: Math.floor(damage),
+      effectiveness: effectiveness < 1 ? "not very effective" : effectiveness > 1 ? "super effective" : "normal"
+    };
   };
+
+  const handleNarration = async ( attacker, move, defender, outcome, hpRemaining ) =>{
+    const narration = await addNarate({
+      attacker: attacker,
+      move: move,
+      defender: defender,
+      outcome: outcome,
+      hpRemaining: hpRemaining
+    });
+    setBattleNarration(narration.message);
+    console.log("Narration:", narration.message);
+  }
 
   // Choose best move for NPC by expected damage
   const chooseNpcMove = (npc, target) => {
@@ -59,7 +78,7 @@ const Battle = ({ onNext }) => {
     let best = npc.moves[0];
     let bestScore = -Infinity;
     for (const m of npc.moves) {
-      const dmg = calculateDamage(npc, target, m);
+      const dmg = calculateDamage(npc, target, m).damage;
       if (dmg > bestScore) {
         bestScore = dmg;
         best = m;
@@ -73,6 +92,12 @@ const Battle = ({ onNext }) => {
     if (!attacker || !move || !defenderSide) return false;
     setBattleMessage(`${attacker.name} used ${move.name}!`);
     // animation: attacker moves / defender flicker
+
+    const damage = calculateDamage(attacker, defenderSide, move);
+    const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage.damage, 0);
+    handleNarration(
+      attacker.name, move.name, defenderSide.name, damage.effectiveness,(newHP / defenderSide?.maxHP) * 100
+    );
     if (attackerIsPlayer) {
       // player attacks -> show NPC "hit" animation briefly
       // setNpcAttacking(true);
@@ -96,21 +121,18 @@ const Battle = ({ onNext }) => {
 
     if (attackerIsPlayer) {
       setNpcHit(true);
-      await wait(500);
+      await wait(1500);
       setNpcHit(false);
     } else {
       setIsTeamHit(true);
-      await wait(500);
+      await wait(1500);
       setIsTeamHit(false);
     }
-    // apply damage
-    const damage = calculateDamage(attacker, defenderSide, move);
     if (attackerIsPlayer) {
       // target is NPC (npcTeam[0])
-      setNpcDamage(damage);
+      setNpcDamage(damage.damage);
       await wait(1000);
       setNpcDamage(null);
-      const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
       if (newHP <= 0) {
         // NPC fainted
         setBattleMessage(`${defenderSide.name} fainted!`);
@@ -127,11 +149,9 @@ const Battle = ({ onNext }) => {
         return false;
       }
     } else {
-      // target is player (team[0])
-      setPlayerDamage(damage);
+      setPlayerDamage(damage.damage);
       await wait(1000);
       setPlayerDamage(null);
-      const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
       if (newHP <= 0) {
         // Player's current fainted
         setInventory((prev) => [...prev, defenderSide]);
