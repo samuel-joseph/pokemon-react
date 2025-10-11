@@ -4,8 +4,9 @@ import pokeball from "../assets/pokeball.png";
 import { typeEffectiveness } from "../helper/typeEffectiveness";
 import { motion } from "framer-motion";
 import { addNarate } from "../services/pokemonService";
-import { speak } from "../services/ttsService";
+import { speakEleven, speakSynthesis } from "../services/ttsService";
 import { typeColors } from "../helper/typeColor";
+import BattleMessage from "./BattleMessage";
 
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
@@ -22,7 +23,6 @@ const Battle = ({ onNext }) => {
 
   const [battleMessage, setBattleMessage] = useState("");
 
-  const [battleNarration, setBattleNarration] = useState("");
 
 
   const currentPokemon = team[0];
@@ -33,6 +33,7 @@ const Battle = ({ onNext }) => {
   const HIDE_MOVE_TIMER = 3500;
   const INBETWEEN_HIT_TIME = 3000;
   const POKEMON_ATTACK_TIME = 2500;
+  const BG_COLOR_TIME = 3200;
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -67,43 +68,42 @@ const Battle = ({ onNext }) => {
   };
 
 
-  const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
-    let narrationText = "";
+  const capitalize = (str) => str?.charAt(0).toUpperCase() + str?.slice(1);
 
-    try {
-      const response = await addNarate({
-        attacker,
-        move,
-        defender,
-        outcome,
-        hpRemaining,
-      });
+const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
+  let narrationText = "";
 
-      // Check if backend returned the "Failed" message
-      if (response?.message === "Failed to generate narration.") {
-        throw new Error("Backend failed to generate AI narration");
-      }
+  try {
+    const response = await addNarate({
+      attacker,
+      move,
+      defender,
+      outcome,
+      hpRemaining,
+    });
 
-      // Normal AI-generated narration
-      narrationText = response.message;
-    } catch (err) {
-      console.warn("Using fallback narration:", err);
-
-      // Hard-coded fallback
-      const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
-      narrationText = `${attacker} used ${move} on ${defender}. ${outcomePhrase}`;
+    if (response?.message === "Failed to generate narration.") {
+      throw new Error("Backend failed to generate AI narration");
     }
 
-    // Speak the narration
-    const utter = new SpeechSynthesisUtterance(narrationText);
-    const voices = window.speechSynthesis.getVoices();
-    utter.voice = voices.find((v) => v.lang === "en-US") || null;
-    utter.lang = "en-US";
-    utter.volume = 1;
-    utter.pitch = .15;
-    utter.rate = .5;
-    window.speechSynthesis.speak(utter);
-  };
+    narrationText = response.message;
+  } catch (err) {
+    console.warn("Using fallback narration:", err);
+
+    const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
+
+    // Make sure names are capitalized
+    const attackerName = typeof attacker === "string" ? capitalize(attacker) : attacker.name;
+    const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
+
+    narrationText = `${attackerName} used ${move} on ${defenderName}. ${outcomePhrase}`;
+  }
+
+  setBattleMessage(narrationText);
+  // speakEleven(narrationText);
+  speakSynthesis(narrationText);
+};
+
 
 
 
@@ -127,7 +127,7 @@ const Battle = ({ onNext }) => {
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
   if (!attacker || !move || !defenderSide) return false;
 
-  setBattleMessage(`${attacker.name} used ${move.name}!`);
+  // setBattleMessage(`${attacker.name} used ${move.name}!`);
 
   // Accuracy check
   const hitRoll = Math.random() * 100;
@@ -329,7 +329,7 @@ const Battle = ({ onNext }) => {
       return newTeam;
     });
     const newPokemon = team[idx + 1].name;
-    await speak(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
+    await speakSynthesis(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
     // NPC gets a free attack after swap
     await wait(3000);
     if (npcTeam.length > 0) {
@@ -352,7 +352,7 @@ const Battle = ({ onNext }) => {
     // revert back after 2 seconds
     setTimeout(() => {
       setBgColor("#FFFFFF");
-    }, 2000);
+    }, BG_COLOR_TIME);
   };
 
   return (
@@ -464,11 +464,8 @@ const Battle = ({ onNext }) => {
           </div>
         }
         {!movesEnabled &&
-          <div className="w-full text-black p-4 text-center text-lg font-mono">
-            {battleMessage || "What will you do?"}
-          </div>
+          <BattleMessage battleMessage={battleMessage} />
         }
-
       </div>
     </div>
   );

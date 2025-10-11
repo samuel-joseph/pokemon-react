@@ -118,7 +118,7 @@ function ShowRegionPokemon() {
 
   // 4️⃣ Pokémon selection screen
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto overflow-y-auto overscroll-none">
       <h1 className="text-3xl font-bold text-center text-red-600 mb-6">
         {regionName.charAt(0).toUpperCase() + regionName.slice(1)} Pokémons
       </h1>
