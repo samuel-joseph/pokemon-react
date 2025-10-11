@@ -32,6 +32,10 @@ const TeamSelection = ({ onNext }) => {
   useEffect(() => {
     if (team.length === 3) {
       const timer = setTimeout(() => {
+        if (!npc || !npc.gymLeaders || npc.gymLeaders.length === 0) {
+          navigate("/");
+          return;
+        }
         onNext();
 
         const leader = npc.gymLeaders[0];
@@ -146,7 +150,7 @@ const TeamSelection = ({ onNext }) => {
           </div>
 
           <div key={npc.region}>
-            {npc.gymLeaders.map((leader) => (
+            {npc && npc.gymLeaders.map((leader) => (
               <div
                 key={leader.name}
                 className="mb-10 bg-white rounded-xl shadow-lg p-6"
