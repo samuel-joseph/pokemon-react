@@ -9,11 +9,11 @@ const Stadium = () => {
   const [outcome, setOutcome] = useState(null);
   
   // ✅ Hook must be inside the component body
-  const { npc, team } = useTeam();
+  const { team } = useTeam();
 
   const renderStage = () => {
     // ✅ Fallback check — if missing data, redirect to default
-    if (!npc || !team || team.length === 0) {
+    if ( !team || team.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center">
           <h2 className="text-2xl font-semibold text-gray-700 mb-4">
