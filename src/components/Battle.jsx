@@ -5,12 +5,12 @@ import { typeEffectiveness } from "../helper/typeEffectiveness";
 import { motion } from "framer-motion";
 import { addNarate } from "../services/pokemonService";
 import { speak } from "../services/ttsService";
-
-// import puter from "puter";
+import { typeColors } from "../helper/typeColor";
 
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
+  const [bgColor, setBgColor] = useState("#FFFFFF");
   const [movesEnabled, setMovesEnabled] = useState(true);
   const [npcAttacking, setNpcAttacking] = useState(false);
   const [isTeamHit, setIsTeamHit] = useState(false);
@@ -66,18 +66,46 @@ const Battle = ({ onNext }) => {
     };
   };
 
-  const handleNarration = async ( attacker, move, defender, outcome, hpRemaining ) =>{
-    const narration = await addNarate({
-      attacker: attacker,
-      move: move,
-      defender: defender,
-      outcome: outcome,
-      hpRemaining: hpRemaining
-    });
-    setBattleNarration(narration.message);
 
-    await speak(narration.message);
-  }
+  const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
+    let narrationText = "";
+
+    try {
+      const response = await addNarate({
+        attacker,
+        move,
+        defender,
+        outcome,
+        hpRemaining,
+      });
+
+      // Check if backend returned the "Failed" message
+      if (response?.message === "Failed to generate narration.") {
+        throw new Error("Backend failed to generate AI narration");
+      }
+
+      // Normal AI-generated narration
+      narrationText = response.message;
+    } catch (err) {
+      console.warn("Using fallback narration:", err);
+
+      // Hard-coded fallback
+      const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
+      narrationText = `${attacker} used ${move} on ${defender}. ${outcomePhrase}`;
+    }
+
+    // Speak the narration
+    const utter = new SpeechSynthesisUtterance(narrationText);
+    const voices = window.speechSynthesis.getVoices();
+    utter.voice = voices.find((v) => v.lang === "en-US") || null;
+    utter.lang = "en-US";
+    utter.volume = 1;
+    utter.pitch = .15;
+    utter.rate = .5;
+    window.speechSynthesis.speak(utter);
+  };
+
+
 
   // Choose best move for NPC by expected damage
   const chooseNpcMove = (npc, target) => {
@@ -94,41 +122,26 @@ const Battle = ({ onNext }) => {
     return best;
   };
 
-  // perform a single attack and return whether the target fainted
+
+
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
-    if (!attacker || !move || !defenderSide) return false;
-    setBattleMessage(`${attacker.name} used ${move.name}!`);
-    // animation: attacker moves / defender flicker
+  if (!attacker || !move || !defenderSide) return false;
 
-    const damage = calculateDamage(attacker, defenderSide, move);
-    const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage.damage, 0);
-    // handleNarration(
-    //   attacker.name, move.name, defenderSide.name, damage.effectiveness,(newHP / defenderSide?.maxHP) * 100
-    // );
-    const text = prompt(
-      attacker.name, move.name, defenderSide.name, damage.effectiveness,(newHP / defenderSide?.maxHP) * 100
+  setBattleMessage(`${attacker.name} used ${move.name}!`);
+
+  // Accuracy check
+  const hitRoll = Math.random() * 100;
+  if (hitRoll > (move.accuracy ?? 100)) {
+    // Move missed
+    await handleNarration(
+      attacker.name,
+      move.name,
+      defenderSide.name,
+      "missed",
+      ((defenderSide.currentHP ?? defenderSide.maxHP) / defenderSide.maxHP) * 100
     );
-    if (attackerIsPlayer) {
-      // player attacks -> show NPC "hit" animation briefly
-      // setNpcAttacking(true);
-      setPlayerAttacking(true);
-      // await wait(400);
-      await wait(POKEMON_ATTACK_TIME);
-      setPlayerAttacking(false);
-      // setNpcAttacking(false);
-      // small delay before applying damage for smoothness
-      await wait(150);
-    } else {
-      // npc attacks -> npc moves forward then player flicker
-      setNpcAttacking(true);
-      await wait(POKEMON_ATTACK_TIME);
-      // player hit flicker
-      // setIsTeamHit(true);
-      await wait(150);
-      // setIsTeamHit(false);
-      setNpcAttacking(false);
-    }
 
+    setBattleMessage(`${attacker.name}'s ${move.name} missed!`);
 
     if (attackerIsPlayer) {
       setNpcHit(true);
@@ -139,46 +152,110 @@ const Battle = ({ onNext }) => {
       await wait(INBETWEEN_HIT_TIME);
       setIsTeamHit(false);
     }
-    if (attackerIsPlayer) {
-      // target is NPC (npcTeam[0])
-      setNpcDamage(damage.damage);
-      await wait(1000);
-      setNpcDamage(null);
-      if (newHP <= 0) {
-        // NPC fainted
-        setBattleMessage(`${defenderSide.name} fainted!`);
-        setInventory((prev) => [...prev, defenderSide]);
-        setNpcTeam((prev) => prev.slice(1)); // remove first
-        return true;
-      } else {
-        // update npcTeam[0] hp
-        setNpcTeam((prev) => {
-          const copy = [...prev];
-          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
-          return copy;
-        });
-        return false;
+
+    return false; // attack missed
+  }
+
+  // Move hits, calculate damage
+  const { damage, effectiveness } = calculateDamage(attacker, defenderSide, move);
+  const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
+
+  // Super-effective background flash
+  if (effectiveness === "super effective") {
+    changeBgColor(move.type);
+  }
+
+  await handleNarration(
+    attacker.name,
+    move.name,
+    defenderSide.name,
+    effectiveness,
+    (newHP / defenderSide.maxHP) * 100
+  );
+
+  // --- Reduce PP and remove if 0 ---
+  if (attacker.moves) {
+    const moveIndex = attacker.moves.findIndex((m) => m.name === move.name);
+    if (moveIndex !== -1) {
+      attacker.moves[moveIndex].pp = Math.max((attacker.moves[moveIndex].pp ?? 1) - 1, 0);
+      if (attacker.moves[moveIndex].pp === 0) {
+        attacker.moves.splice(moveIndex, 1);
       }
+    }
+  }
+
+  // Update team / npcTeam state
+  if (attackerIsPlayer) {
+    setTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = { ...copy[0], moves: [...attacker.moves] };
+      return copy;
+    });
+  } else {
+    setNpcTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = { ...copy[0], moves: [...attacker.moves] };
+      return copy;
+    });
+  }
+
+  // --- Apply damage and animate ---
+  if (attackerIsPlayer) {
+    setPlayerAttacking(true);
+    await wait(POKEMON_ATTACK_TIME);
+    setPlayerAttacking(false);
+
+    setNpcHit(true);
+    await wait(INBETWEEN_HIT_TIME);
+    setNpcHit(false);
+
+    setNpcDamage(damage);
+    await wait(1000);
+    setNpcDamage(null);
+
+    if (newHP <= 0) {
+      setBattleMessage(`${defenderSide.name} fainted!`);
+      setInventory((prev) => [...prev, defenderSide]);
+      setNpcTeam((prev) => prev.slice(1));
+      return true;
     } else {
-      setPlayerDamage(damage.damage);
-      await wait(1000);
-      setPlayerDamage(null);
-      if (newHP <= 0) {
-        // Player's current fainted
-        setInventory((prev) => [...prev, defenderSide]);
-        setTeam((prev) => prev.slice(1));
-        return true;
-      } else {
-        // update team[0] hp
-        setTeam((prev) => {
-          const copy = [...prev];
-          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
-          return copy;
-        });
-        return false;
-      }
-    }    
-  };
+      setNpcTeam((prev) => {
+        const copy = [...prev];
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        return copy;
+      });
+      return false;
+    }
+  } else {
+    setNpcAttacking(true);
+    await wait(POKEMON_ATTACK_TIME);
+    setNpcAttacking(false);
+
+    setIsTeamHit(true);
+    await wait(INBETWEEN_HIT_TIME);
+    setIsTeamHit(false);
+
+    setPlayerDamage(damage);
+    await wait(1000);
+    setPlayerDamage(null);
+
+    if (newHP <= 0) {
+      setBattleMessage(`${defenderSide.name} fainted!`);
+      setInventory((prev) => [...prev, defenderSide]);
+      setTeam((prev) => prev.slice(1));
+      return true;
+    } else {
+      setTeam((prev) => {
+        const copy = [...prev];
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        return copy;
+      });
+      return false;
+    }
+  }
+};
+
+
 
   // Player initiates a turn with a chosen move
   const handlePlayerAttack = async (playerMove) => {
@@ -265,8 +342,26 @@ const Battle = ({ onNext }) => {
     setAllowSwap(true);
   };
 
+
+    // Animate background change
+  const changeBgColor = (type) => {
+    console.log("Changing bg color for type:", typeColors[type]);
+    const color = typeColors[type] || "#FFFFFF";
+    setBgColor(color);
+
+    // revert back after 2 seconds
+    setTimeout(() => {
+      setBgColor("#FFFFFF");
+    }, 2000);
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b relative">
+    <div
+      className="flex flex-col h-screen relative"
+      style={{
+        backgroundColor: bgColor,
+        transition: "background-color 2s ease-in-out",
+      }}>
       {/* NPC Team Icons */}
       <div className="absolute top-4 left-4 flex space-x-2">
         {reserveNpc.map((poke, idx) => (

@@ -23,7 +23,7 @@ const Stadium = () => {
     }
   };
 
-  return <div className="p-6">{renderStage()}</div>;
+  return <div>{renderStage()}</div>;
 };
 
 export default Stadium;
