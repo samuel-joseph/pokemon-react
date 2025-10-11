@@ -1,4 +1,6 @@
-import { useEffect } from "react"; import { useNavigate } from "react-router-dom"; import { useTeam } from "./TeamContext"; // adjust path 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTeam } from "./TeamContext"; // adjust path
 import { regions } from "../helper/region";
 import { getRecord, addRecord, updateRecord } from "../services/pokemonService";
 
@@ -17,71 +19,54 @@ const BattleResult = ({ outcome }) => {
     name,
   } = useTeam();
 
+  // Add or update leaderboard for the current player
   const addOrUpdateLeaderBoard = async () => {
-  try {
-    // Fetch all current leaderboard data
-    const leaderboard = await getRecord();
-
-    // Find if the player already exists
-    const existingPlayer = leaderboard.find(
-      (player) => player.name.toLowerCase() === name.toLowerCase()
-    );
-
-    if (existingPlayer) {
-      // Copy existing record
-      const updatedRecord = [...existingPlayer.record];
-
-      // Check if region already exists in the record
-      const regionIndex = updatedRecord.findIndex(
-        (r) => r.region.toLowerCase() === region.toLowerCase()
+    try {
+      const leaderboard = await getRecord();
+      const existingPlayer = leaderboard.find(
+        (player) => player.name.toLowerCase() === name.toLowerCase()
       );
 
-      if (regionIndex >= 0) {
-        // Region exists → increment win
-        updatedRecord[regionIndex].win += 1;
+      if (existingPlayer) {
+        const updatedRecord = [...existingPlayer.record];
+        const regionIndex = updatedRecord.findIndex(
+          (r) => r.region.toLowerCase() === region.toLowerCase()
+        );
 
-        // Optional: update Pokémon if needed
-        updatedRecord[regionIndex].pokemon = [...inventory];
+        if (regionIndex >= 0) {
+          updatedRecord[regionIndex].win += 1;
+          updatedRecord[regionIndex].pokemon = [...inventory];
+        } else {
+          updatedRecord.push({
+            region,
+            win: 1,
+            pokemon: [...inventory],
+          });
+        }
+
+        await updateRecord({ name, record: updatedRecord });
+        console.log(`✅ Updated record for ${name}`);
       } else {
-        // New region → add it
-        updatedRecord.push({
-          region,
-          win: 1,
-          pokemon: [...inventory],
-        });
+        const newRecord = [
+          { region, win: 1, pokemon: [...inventory] },
+        ];
+        await addRecord({ name, record: newRecord });
+        console.log(`✅ Added new player ${name}`);
       }
-
-      // Send updated record to backend
-      await updateRecord({ name, record: updatedRecord });
-      console.log(`✅ Updated record for ${name}`);
-    } else {
-      // New player → add record
-      const newRecord = [
-        {
-          region,
-          win: 1,
-          pokemon: [...inventory],
-        },
-      ];
-
-      await addRecord({ name, record: newRecord });
-      console.log(`✅ Added new player ${name}`);
+    } catch (err) {
+      console.error("❌ Failed to update leaderboard:", err);
     }
-  } catch (err) {
-    console.error("❌ Failed to update leaderboard:", err);
-  }
-};
-
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Reset player team
+      // Reset player team & inventory
       setTeam([]);
       setInventory([]);
       setNpc([]);
       setNpcTeam([]);
 
-      // Reset NPC team to full HP
+      // Reset NPC team HP
       setNpcTeam(
         npc?.gymLeaders?.[0]?.pokemon?.map((p) => ({
           ...p,
@@ -91,13 +76,13 @@ const BattleResult = ({ outcome }) => {
 
       const index = regions.findIndex((r) => r === region);
 
-      // If player wins and trophy not already awarded
+      // Award trophy if player won
       if (outcome === "win" && trophy !== index + 1) {
         addTrophy();
         addOrUpdateLeaderBoard();
       }
 
-      // Redirect to /region
+      // Redirect to region page
       navigate("/region", { replace: true });
     }, 3000);
 
@@ -105,16 +90,31 @@ const BattleResult = ({ outcome }) => {
   }, [outcome, setTeam, setNpcTeam, addTrophy, navigate, npc]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-700 p-6">
       {outcome === "win" ? (
-        <h1 className="text-5xl font-extrabold text-green-400 animate-bounce">
-          🎉 Congratulations! You beat the Champion! 🎉
-        </h1>
+        <>
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-green-400 mb-4 animate-bounce text-center">
+            🎉 Congratulations! 🎉
+          </h1>
+          <p className="text-xl sm:text-2xl text-white text-center">
+            You defeated the Champion of {region}!
+          </p>
+        </>
       ) : (
-        <h1 className="text-6xl font-extrabold text-red-600 animate-pulse">
-          ❌ You Lost ❌
-        </h1>
+        <>
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-red-600 mb-4 animate-pulse text-center">
+            ❌ You Lost ❌
+          </h1>
+          <p className="text-xl sm:text-2xl text-white text-center">
+            Better luck next time! Try again to defeat the Champion of {region}.
+          </p>
+        </>
       )}
+      <div className="mt-8">
+        <p className="text-gray-300 italic animate-pulse">
+          Redirecting back to regions...
+        </p>
+      </div>
     </div>
   );
 };

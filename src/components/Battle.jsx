@@ -144,13 +144,13 @@ const Battle = ({ onNext }) => {
     setBattleMessage(`${attacker.name}'s ${move.name} missed!`);
 
     if (attackerIsPlayer) {
-      setNpcHit(true);
+      setPlayerAttacking(true);
       await wait(INBETWEEN_HIT_TIME);
-      setNpcHit(false);
+      setPlayerAttacking(false);
     } else {
-      setIsTeamHit(true);
+      setNpcAttacking(true);
       await wait(INBETWEEN_HIT_TIME);
-      setIsTeamHit(false);
+      setNpcAttacking(false);
     }
 
     return false; // attack missed
