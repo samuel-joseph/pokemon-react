@@ -11,6 +11,9 @@ import BattleMessage from "./BattleMessage";
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
+  const [npcChargeMove, setNpcChargeMove] = useState(null);
+  const [playerChargeMove, setPlayerChargeMove] = useState(null);
+
   const [bgColor, setBgColor] = useState("#FFFFFF");
   const [movesEnabled, setMovesEnabled] = useState(true);
   const [npcAttacking, setNpcAttacking] = useState(false);
@@ -34,6 +37,18 @@ const Battle = ({ onNext }) => {
   const INBETWEEN_HIT_TIME = 3000;
   const POKEMON_ATTACK_TIME = 2500;
   const BG_COLOR_TIME = 3200;
+
+
+
+  const RECHARGE_MOVE_IDS = [
+  63, 416, 314, 338, 321, 377, 437, 773, 764, 881
+];
+
+const CHARGING_MOVE_IDS = [
+  76, 19, 91, 314, 338, 321 // Solar Beam, Fly, Dig, Blast Burn, Frenzy Plant, Hydro Cannon
+];
+  
+  
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -127,7 +142,9 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
   if (!attacker || !move || !defenderSide) return false;
 
-  // setBattleMessage(`${attacker.name} used ${move.name}!`);
+    // setBattleMessage(`${attacker.name} used ${move.name}!`);
+    
+  if (move.id && RECHARGE_MOVE_IDS.includes(move.id)) attacker.recharging = true;
 
   // Accuracy check
   const hitRoll = Math.random() * 100;
@@ -262,8 +279,33 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     if (!currentPokemon || !currentNpc || !movesEnabled) return;
     setMovesEnabled(false);
     setAllowSwap(false);
+    let npcMove = chooseNpcMove(currentNpc, currentPokemon);
 
-    const npcMove = chooseNpcMove(currentNpc, currentPokemon);
+
+    if (playerChargeMove) {
+      playerMove = playerChargeMove;
+      setPlayerChargeMove(null);
+      currentPokemon.charging = false;
+    } else if (playerMove.id && CHARGING_MOVE_IDS.includes(playerMove.id)) {
+      currentPokemon.charging = true;
+      setPlayerChargeMove(playerMove);
+      setBattleMessage(`${currentPokemon.name} is charging ${playerMove.name}!`);
+      await wait(2000);
+    }
+
+    if (npcChargeMove) {
+      npcMove = npcChargeMove;
+      setNpcChargeMove(null);
+      currentNpc.charging = false;
+    } else if (npcMove.id && CHARGING_MOVE_IDS.includes(npcMove.id)) {
+      currentNpc.charging = true;
+      setNpcChargeMove(npcMoveMove);
+      setBattleMessage(`${currentPokemon.name} is charging ${playerMove.name}!`);
+      await wait(2000); // pause for message
+    }
+
+    let playerCharging = currentPokemon.charging || currentPokemon.recharging;
+    let npcCharging = currentNpc.charging || currentNpc.recharging;
 
     // decide order by priority first, then speed
     const playerPrio = playerMove?.priority ?? 0;
@@ -280,11 +322,13 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     // Execute in order, stopping if target faints
     if (playerFirst) {
       // player attacks
-      const npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
+      const npcFainted = playerCharging ?
+        false : await performAttack(currentPokemon, currentNpc, playerMove, true);
       // if NPC still alive and has a move, counterattack
       if (!npcFainted && npcMove) {
         await wait(3000);
-        const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+        const playerFainted = npcCharging ?
+          false :  await performAttack(currentNpc, currentPokemon, npcMove, false);
         if (playerFainted) {
           // player died, allow swap if reserves exist
           setAllowSwap(true);
@@ -296,24 +340,30 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     } else {
       // NPC attacks first
       if (npcMove) {
-        const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+        const playerFainted = npcCharging ?
+          false : await performAttack(currentNpc, currentPokemon, npcMove, false);
         if (!playerFainted) {
           await wait(3000);
-          await performAttack(currentPokemon, currentNpc, playerMove, true);
+          if(!playerCharging) await performAttack(currentPokemon, currentNpc, playerMove, true);
         } else {
           // player's current fainted - allow swap
           setAllowSwap(true);
         }
       } else {
         // NPC had no move, player attacks
-        await performAttack(currentPokemon, currentNpc, playerMove, true);
+        if(!playerCharging) await performAttack(currentPokemon, currentNpc, playerMove, true);
       }
     }
 
     // small gap before enabling controls again
     await wait(HIDE_MOVE_TIMER);
-    setMovesEnabled(true);
-    setAllowSwap(true);
+    // if (!currentPokemon.charging && !currentPokemon.recharging) {
+      setMovesEnabled(true);
+      setAllowSwap(true);
+    // }
+
+    if (currentPokemon.recharging) currentPokemon.recharging = false;
+    if (currentNpc.recharging) currentNpc.recharging = false;
   };
 
   // Swap Pokémon (by swapping array indices)
