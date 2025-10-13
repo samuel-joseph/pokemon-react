@@ -96,13 +96,6 @@ export const addNarate = async ({
   outcome,
   hpRemaining,
 }) => {
-  console.log("Adding narration with:", {
-    attacker,
-    move: "",
-    defender: "",
-    outcome: "",
-    hpRemaining: "",
-  });
   try {
     const res = await fetch(`${API_URL}/api/ai/comentate`, {
       method: "POST",

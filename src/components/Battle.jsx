@@ -114,7 +114,7 @@ const calculateDamage = (attacker, defender, move) => {
   // Apply random factor and hits
   const damage = Math.floor(baseDamage * effectiveness * (Math.random() * 0.15 + 0.925) * hits);
 
-  return {
+  return { 
     damage,
     effectiveness: effectiveness < 1 ? "not very effective" : effectiveness > 1 ? "super effective" : "normal"
   };
@@ -225,14 +225,17 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     return copy;
   });
 
+
   // Display battle message
   const targetName = targetIsSelf ? attacker.name : defender.name;
   const messages = move.stat_changes.map(({ stat, change }) => {
     const desc = change > 0 ? "rose!" : "fell!";
-    return `${targetName}'s ${stat.name} ${desc}`;
+    return `${targetName}'s used ${move.name} ${stat.name} ${desc}`;
   }).join(" ");
-  setBattleMessage(messages);
-  await wait(1000);
+  await wait(1500);
+  handleNarration(messages, "", "", "", "");
+  // setBattleMessage(messages);
+  await wait(1500);
 
   return updatedTarget;
 };
@@ -282,13 +285,13 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     if (move.drain !== 0) {
     const drainAmount = Math.floor(damage * (Math.abs(move.drain) / 100));
 
-    setBattleMessage((prev) => {
-      if (move.drain > 0) {
-        return `${attacker.name} absorbed health!`;
-      } else {
-        return `${attacker.name} was hurt by recoil!`;
-      }
-    });
+    // setBattleMessage((prev) => {
+    //   if (move.drain > 0) {
+    //     return `${attacker.name} absorbed health!`;
+    //   } else {
+    //     return `${attacker.name} was hurt by recoil!`;
+    //   }
+    // });
 
     if (attackerIsPlayer) {
       setTeam((prev) => {
@@ -453,9 +456,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         playerMove.category_name === "net-good-stats") {
         // ✅ Apply stat changes only (no damage)
         await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
-        await wait(1500);
-        setBattleMessage(`${currentPokemon.name} used ${playerMove.name}!`);
-        await wait(1000);
       } else {
         // ✅ Only do damage for non-status moves
         npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
@@ -467,9 +467,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         await wait(3000);
         if (npcMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
-          await wait(1500);
-          setBattleMessage(`${currentNpc.name} used ${npcMove.name}!`);
-          await wait(1000);
         } else {
           playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
           if (npcMove.category_name === "damage+raise"
@@ -482,9 +479,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     } else {
       if (npcMove.category_name === "net-good-stats") {
         await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
-        await wait(1500);
-        setBattleMessage(`${currentNpc.name} used ${npcMove.name}!`);
-        await wait(1500);
       } else {
         playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
         if (npcMove.category_name === "damage+raise"
@@ -495,9 +489,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         await wait(3000);
         if (playerMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
-          await wait(1500);
-          setBattleMessage(`${currentPokemon.name} used ${playerMove.name}!`);
-          await wait(1000);
         } else {
           playerFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
           if (playerMove.category_name === "damage+raise"
