@@ -8,6 +8,14 @@ import { speakEleven, speakSynthesis } from "../services/ttsService";
 import { typeColors } from "../helper/typeColor";
 import BattleMessage from "./BattleMessage";
 
+
+
+
+// fix -> handleSwapPokemon
+// missing fn -> charge, recharge and status moves
+
+
+
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
