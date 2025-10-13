@@ -152,11 +152,10 @@ const calculateDamage = (attacker, defender, move) => {
     } catch (err) {
       console.warn("Using fallback narration:", err);
           // Make sure names are capitalized
-      const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
       const attackerName = typeof attacker === "string" ? capitalize(attacker) : attacker.name;
       const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
 
-      narrationText = `${attackerName} used ${move} on ${defenderName}. ${outcomePhrase}`;
+      narrationText = `${attackerName} used ${move} `;
   }
 
 
