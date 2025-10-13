@@ -514,31 +514,47 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 };
 
 
-  // Swap Pokémon (by swapping array indices)
-  const handleSwapPokemon = async (idx) => {
-    await wait(1000); // debounce
-    if (!allowSwap || !movesEnabled) return;
-    setAllowSwap(false);
-    setMovesEnabled(false);
-    const previosPokemon = currentPokemon.name;
-    setTeam((prev) => {
-      const newTeam = [...prev];
-      [newTeam[0], newTeam[idx + 1]] = [newTeam[idx + 1], newTeam[0]];
-      return newTeam;
-    });
-    const newPokemon = team[idx + 1].name;
-    // await speakSynthesis(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
-    // NPC gets a free attack after swap
-    await wait(3000);
-    if (npcTeam.length > 0) {
-      const npcMove = chooseNpcMove(currentNpc, currentPokemon);
-      if (npcMove) await performAttack(currentNpc, currentPokemon, npcMove, false);
-    }
+const handleSwapPokemon = async (idx) => {
+  if (!allowSwap || !movesEnabled) return;
 
-    await wait(HIDE_MOVE_TIMER);
-    setMovesEnabled(true);
-    setAllowSwap(true);
-  };
+  setAllowSwap(false);
+  setMovesEnabled(false);
+
+  const prevPokemon = currentPokemon;
+  let newPokemonName;
+
+  setTeam((prevTeam) => {
+    const newTeam = [...prevTeam];
+    const swapIndex = idx + 1;
+
+    // Swap Pokémon
+    [newTeam[0], newTeam[swapIndex]] = [newTeam[swapIndex], newTeam[0]];
+    newPokemonName = newTeam[0]?.name; // capture new Pokémon
+    return newTeam;
+  });
+
+  // Wait for React to commit the new team state
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  setBattleMessage(`Come back, ${prevPokemon.name}! Go, ${newPokemonName}!`);
+
+  // Wait for message to appear before NPC attack
+  await wait(2000);
+
+  // NPC attacks after swap
+  if (npcTeam.length > 0 && currentNpc) {
+    const npcMove = chooseNpcMove(currentNpc, prevPokemon);
+    if (npcMove) {
+      await performAttack(currentNpc, currentPokemon, npcMove, false);
+    }
+  }
+
+  // Restore state after everything resolves
+  await wait(HIDE_MOVE_TIMER);
+  setMovesEnabled(true);
+  setAllowSwap(true);
+};
+
 
 
     // Animate background change
