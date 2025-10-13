@@ -503,6 +503,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
   await wait(HIDE_MOVE_TIMER);
   setMovesEnabled(true);
   setAllowSwap(true);
+  setBattleMessage("");
 };
 
 
