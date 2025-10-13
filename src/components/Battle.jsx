@@ -67,25 +67,59 @@ const CHARGING_MOVE_IDS = [
     return fallback;
   };
 
-  // Damage calculation helper with type effectiveness
-  const calculateDamage = (attacker, defender, move) => {
-    let hits = 1;
-    if (!move || move.power == null) return 0;
-    const effectiveness = (defender.types ?? []).reduce(
-      (mult, t) => mult * (typeEffectiveness[move.type]?.[t] ?? 1),
-      1
-    );
 
-    if(move.max_hits && move.min_hits){
-      hits = Math.floor(Math.random() * (move.max_hits - move.min_hits + 1)) + move.min_hits;
-    }
-    const damage = (move.power * effectiveness * (Math.random() * 0.15 + 0.925)) * hits;
 
-    return {
-      damage: Math.floor(damage),
-      effectiveness: effectiveness < 1 ? "not very effective" : effectiveness > 1 ? "super effective" : "normal"
-    };
+// Helper to get effective stat including stages
+const getEffectiveStat = (pokemon, statName) => {
+  const statEntry = pokemon.stats.find((s) => s.name.toLowerCase() === statName.toLowerCase());
+  if (!statEntry) return 0;
+
+  const stage = statEntry.stage ?? 0;
+  const base = statEntry.base ?? 0;
+
+  if (["accuracy", "evasion"].includes(statName.toLowerCase())) {
+    return base * (1 + 0.25 * stage);
+  } else {
+    return stage >= 0
+      ? Math.floor(base * (2 + stage) / 2)
+      : Math.floor(base * 2 / (2 - stage));
+  }
+};
+
+// Damage calculation helper with stats, stages, and type effectiveness
+const calculateDamage = (attacker, defender, move) => {
+  if (!move || move.power == null) return { damage: 0, effectiveness: "normal" };
+
+  let hits = 1;
+  if (move.max_hits && move.min_hits) {
+    hits = Math.floor(Math.random() * (move.max_hits - move.min_hits + 1)) + move.min_hits;
+  }
+
+  // Determine which stats to use
+  const attackStat = move.damage_class === "physical" ? "attack" : "special-attack";
+  const defenseStat = move.damage_class === "physical" ? "defense" : "special-defense";
+
+  const effectiveAttack = getEffectiveStat(attacker, attackStat);
+  const effectiveDefense = getEffectiveStat(defender, defenseStat);
+
+  // Type effectiveness
+  const effectiveness = (defender.types ?? []).reduce(
+    (mult, t) => mult * (typeEffectiveness[move.type]?.[t] ?? 1),
+    1
+  );
+
+  // Core damage formula
+  const baseDamage = (((2 * attacker.level / 5 + 2) * move.power * effectiveAttack / effectiveDefense) / 50 + 2);
+
+  // Apply random factor and hits
+  const damage = Math.floor(baseDamage * effectiveness * (Math.random() * 0.15 + 0.925) * hits);
+
+  return {
+    damage,
+    effectiveness: effectiveness < 1 ? "not very effective" : effectiveness > 1 ? "super effective" : "normal"
   };
+};
+
 
 
   const capitalize = (str) => str?.charAt(0).toUpperCase() + str?.slice(1);
@@ -93,22 +127,22 @@ const CHARGING_MOVE_IDS = [
 const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
   let narrationText = "";
 
-  try {
-    const response = await addNarate({
-      attacker,
-      move,
-      defender,
-      outcome,
-      hpRemaining,
-    });
+  // try {
+  //   const response = await addNarate({
+  //     attacker,
+  //     move,
+  //     defender,
+  //     outcome,
+  //     hpRemaining,
+  //   });
 
-    if (response?.message === "Failed to generate narration.") {
-      throw new Error("Backend failed to generate AI narration");
-    }
+  //   if (response?.message === "Failed to generate narration.") {
+  //     throw new Error("Backend failed to generate AI narration");
+  //   }
 
-    narrationText = response.message;
-  } catch (err) {
-    console.warn("Using fallback narration:", err);
+  //   narrationText = response.message;
+  // } catch (err) {
+  //   console.warn("Using fallback narration:", err);
 
     const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
 
@@ -117,7 +151,7 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
 
     narrationText = `${attackerName} used ${move} on ${defenderName}. ${outcomePhrase}`;
-  }
+  // }
 
   setBattleMessage(narrationText);
   // speakEleven(narrationText);
@@ -142,190 +176,253 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     return best;
   };
 
+const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) => {
+  if (!move?.stat_changes?.length) return attacker;
+  // Determine who the target is: self or opponent
+  const targetIsSelf =
+    move.category_name === "net-good-stats" ||
+    move.category_name === "damage+raise" ||
+    move.category_name === "damage+lower";
+  const targetUpdater = targetIsSelf
+    ? attackerIsPlayer
+      ? setTeam
+      : setNpcTeam
+    : attackerIsPlayer
+      ? setNpcTeam
+      : setTeam;
+  const target = targetIsSelf ? attacker : defender;
+
+  let updatedTarget = { ...target };
+
+  // Update state
+  targetUpdater((prev) => {
+    const copy = [...prev];
+    const index = copy.findIndex((p) => p.id === target.id);
+    if (index === -1) return prev;
+
+    const current = copy[index];
+    const updatedStats = [...current.stats]; // Keep it an array
+
+    move.stat_changes.forEach(({ stat, change }) => {
+      const statName = stat.name.toLowerCase();
+
+      // Find the stat entry in the array
+      let statEntry = updatedStats.find((s) => s.name === statName);
+      if (!statEntry) {
+        // Initialize if not present
+        statEntry = { name: statName, base: 0, stage: 0 };
+        updatedStats.push(statEntry);
+      }
+
+      // Update stage, clamped between -6 and 6
+      statEntry.stage = Math.max(-6, Math.min(6, (statEntry.stage ?? 0) + change));
+    });
+
+    // Update target
+    updatedTarget = { ...current, stats: updatedStats };
+    copy[index] = updatedTarget;
+    return copy;
+  });
+
+  // Display battle message
+  const targetName = targetIsSelf ? attacker.name : defender.name;
+  const messages = move.stat_changes.map(({ stat, change }) => {
+    const desc = change > 0 ? "rose!" : "fell!";
+    return `${targetName}'s ${stat.name} ${desc}`;
+  }).join(" ");
+  console.log("After ",updatedTarget.stats)
+  setBattleMessage(messages);
+  await wait(1000);
+
+  return updatedTarget;
+};
+
+
+
 
 
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
-  if (!attacker || !move || !defenderSide) return false;
+    if (!attacker || !move || !defenderSide) return false;
 
-    // setBattleMessage(`${attacker.name} used ${move.name}!`);
+      // setBattleMessage(`${attacker.name} used ${move.name}!`);
+      
+      // attacker.recharging = true;
+
+    // Accuracy check
+    const hitRoll = Math.random() * 100;
+    if (hitRoll > (move.accuracy ?? 100)) {
+      // Move missed
+      await handleNarration(
+        attacker.name,
+        move.name,
+        defenderSide.name,
+        "missed",
+        ((defenderSide.currentHP ?? defenderSide.maxHP) / defenderSide.maxHP) * 100
+      );
+
+      setBattleMessage(`${attacker.name}'s ${move.name} missed!`);
+
+      if (attackerIsPlayer) {
+        setPlayerAttacking(true);
+        await wait(INBETWEEN_HIT_TIME);
+        setPlayerAttacking(false);
+      } else {
+        setNpcAttacking(true);
+        await wait(INBETWEEN_HIT_TIME);
+        setNpcAttacking(false);
+      }
+
+      return false; // attack missed
+    }
+
+    // Move hits, calculate damage
+    const { damage, effectiveness } = calculateDamage(attacker, defenderSide, move);
+    const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
     
-    // attacker.recharging = true;
+    if (move.drain !== 0) {
+    const drainAmount = Math.floor(damage * (Math.abs(move.drain) / 100));
 
-  // Accuracy check
-  const hitRoll = Math.random() * 100;
-  if (hitRoll > (move.accuracy ?? 100)) {
-    // Move missed
+    setBattleMessage((prev) => {
+      if (move.drain > 0) {
+        return `${attacker.name} absorbed health!`;
+      } else {
+        return `${attacker.name} was hurt by recoil!`;
+      }
+    });
+
+    if (attackerIsPlayer) {
+      setTeam((prev) => {
+        const copy = [...prev];
+        const current = copy[0];
+        const maxHP = current.maxHP;
+        let newHP = current.currentHP ?? maxHP;
+
+        if (move.drain > 0) {
+          // Heal for % of damage
+          newHP = Math.min(newHP + drainAmount, maxHP);
+        } else if(move.drain < 0) {
+          // Recoil damage
+          newHP = Math.max(newHP - drainAmount, 0);
+        }
+
+        copy[0] = { ...current, currentHP: newHP };
+        return copy;
+      });
+    } else {
+      setNpcTeam((prev) => {
+        const copy = [...prev];
+        const current = copy[0];
+        const maxHP = current.maxHP;
+        let newHP = current.currentHP ?? maxHP;
+
+        if (move.drain > 0) {
+          newHP = Math.min(newHP + drainAmount, maxHP);
+        } else if(move.drain < 0) {
+          newHP = Math.max(newHP - drainAmount, 0);
+        }
+
+        copy[0] = { ...current, currentHP: newHP };
+        return copy;
+      });
+    }
+
+    await wait(1000);
+    }
+
+    // Super-effective background flash
+    if (effectiveness === "super effective") {
+      changeBgColor(move.type);
+    }
+
     await handleNarration(
       attacker.name,
       move.name,
       defenderSide.name,
-      "missed",
-      ((defenderSide.currentHP ?? defenderSide.maxHP) / defenderSide.maxHP) * 100
+      effectiveness,
+      (newHP / defenderSide.maxHP) * 100
     );
 
-    setBattleMessage(`${attacker.name}'s ${move.name} missed!`);
+    // --- Reduce PP and remove if 0 ---
+    if (attacker.moves) {
+      const moveIndex = attacker.moves.findIndex((m) => m.name === move.name);
+      if (moveIndex !== -1) {
+        attacker.moves[moveIndex].pp = Math.max((attacker.moves[moveIndex].pp ?? 1) - 1, 0);
+        if (attacker.moves[moveIndex].pp === 0) {
+          attacker.moves.splice(moveIndex, 1);
+        }
+      }
+    }
 
+    // Update team / npcTeam state
     if (attackerIsPlayer) {
-      setPlayerAttacking(true);
-      await wait(INBETWEEN_HIT_TIME);
-      setPlayerAttacking(false);
-    } else {
-      setNpcAttacking(true);
-      await wait(INBETWEEN_HIT_TIME);
-      setNpcAttacking(false);
-    }
-
-    return false; // attack missed
-  }
-
-  // Move hits, calculate damage
-  const { damage, effectiveness } = calculateDamage(attacker, defenderSide, move);
-  const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
-  
-  if (move.drain) {
-  const drainAmount = Math.floor(damage * (Math.abs(move.drain) / 100));
-
-  setBattleMessage((prev) => {
-    if (move.drain > 0) {
-      return `${attacker.name} absorbed health!`;
-    } else {
-      return `${attacker.name} was hurt by recoil!`;
-    }
-  });
-
-  if (attackerIsPlayer) {
-    setTeam((prev) => {
-      const copy = [...prev];
-      const current = copy[0];
-      const maxHP = current.maxHP;
-      let newHP = current.currentHP ?? maxHP;
-
-      if (move.drain > 0) {
-        // Heal for % of damage
-        newHP = Math.min(newHP + drainAmount, maxHP);
-      } else {
-        // Recoil damage
-        newHP = Math.max(newHP - drainAmount, 0);
-      }
-
-      copy[0] = { ...current, currentHP: newHP };
-      return copy;
-    });
-  } else {
-    setNpcTeam((prev) => {
-      const copy = [...prev];
-      const current = copy[0];
-      const maxHP = current.maxHP;
-      let newHP = current.currentHP ?? maxHP;
-
-      if (move.drain > 0) {
-        newHP = Math.min(newHP + drainAmount, maxHP);
-      } else {
-        newHP = Math.max(newHP - drainAmount, 0);
-      }
-
-      copy[0] = { ...current, currentHP: newHP };
-      return copy;
-    });
-  }
-
-  await wait(1000);
-}
-
-  // Super-effective background flash
-  if (effectiveness === "super effective") {
-    changeBgColor(move.type);
-  }
-
-  await handleNarration(
-    attacker.name,
-    move.name,
-    defenderSide.name,
-    effectiveness,
-    (newHP / defenderSide.maxHP) * 100
-  );
-
-  // --- Reduce PP and remove if 0 ---
-  if (attacker.moves) {
-    const moveIndex = attacker.moves.findIndex((m) => m.name === move.name);
-    if (moveIndex !== -1) {
-      attacker.moves[moveIndex].pp = Math.max((attacker.moves[moveIndex].pp ?? 1) - 1, 0);
-      if (attacker.moves[moveIndex].pp === 0) {
-        attacker.moves.splice(moveIndex, 1);
-      }
-    }
-  }
-
-  // Update team / npcTeam state
-  if (attackerIsPlayer) {
-    setTeam((prev) => {
-      const copy = [...prev];
-      copy[0] = { ...copy[0], moves: [...attacker.moves] };
-      return copy;
-    });
-  } else {
-    setNpcTeam((prev) => {
-      const copy = [...prev];
-      copy[0] = { ...copy[0], moves: [...attacker.moves] };
-      return copy;
-    });
-  }
-
-  // --- Apply damage and animate ---
-  if (attackerIsPlayer) {
-    setPlayerAttacking(true);
-    await wait(POKEMON_ATTACK_TIME);
-    setPlayerAttacking(false);
-
-    setNpcHit(true);
-    await wait(INBETWEEN_HIT_TIME);
-    setNpcHit(false);
-
-    setNpcDamage(damage);
-    await wait(1000);
-    setNpcDamage(null);
-
-    if (newHP <= 0) {
-      setBattleMessage(`${defenderSide.name} fainted!`);
-      setInventory((prev) => [...prev, defenderSide]);
-      setNpcTeam((prev) => prev.slice(1));
-      return true;
+      setTeam((prev) => {
+        const copy = [...prev];
+        copy[0] = { ...copy[0], moves: [...attacker.moves] };
+        return copy;
+      });
     } else {
       setNpcTeam((prev) => {
         const copy = [...prev];
-        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        copy[0] = { ...copy[0], moves: [...attacker.moves] };
         return copy;
       });
-      return false;
     }
-  } else {
-    setNpcAttacking(true);
-    await wait(POKEMON_ATTACK_TIME);
-    setNpcAttacking(false);
 
-    setIsTeamHit(true);
-    await wait(INBETWEEN_HIT_TIME);
-    setIsTeamHit(false);
+    // --- Apply damage and animate ---
+    if (attackerIsPlayer) {
+      setPlayerAttacking(true);
+      await wait(POKEMON_ATTACK_TIME);
+      setPlayerAttacking(false);
 
-    setPlayerDamage(damage);
-    await wait(1000);
-    setPlayerDamage(null);
+      setNpcHit(true);
+      await wait(INBETWEEN_HIT_TIME);
+      setNpcHit(false);
 
-    if (newHP <= 0) {
-      setBattleMessage(`${defenderSide.name} fainted!`);
-      setInventory((prev) => [...prev, defenderSide]);
-      setTeam((prev) => prev.slice(1));
-      return true;
+      setNpcDamage(damage);
+      await wait(1000);
+      setNpcDamage(null);
+
+      if (newHP <= 0) {
+        setBattleMessage(`${defenderSide.name} fainted!`);
+        setInventory((prev) => [...prev, defenderSide]);
+        setNpcTeam((prev) => prev.slice(1));
+        return true;
+      } else {
+        setNpcTeam((prev) => {
+          const copy = [...prev];
+          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+          return copy;
+        });
+        return false;
+      }
     } else {
-      setTeam((prev) => {
-        const copy = [...prev];
-        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
-        return copy;
-      });
-      return false;
+      setNpcAttacking(true);
+      await wait(POKEMON_ATTACK_TIME);
+      setNpcAttacking(false);
+
+      setIsTeamHit(true);
+      await wait(INBETWEEN_HIT_TIME);
+      setIsTeamHit(false);
+
+      setPlayerDamage(damage);
+      await wait(1000);
+      setPlayerDamage(null);
+
+      if (newHP <= 0) {
+        setBattleMessage(`${defenderSide.name} fainted!`);
+        setInventory((prev) => [...prev, defenderSide]);
+        setTeam((prev) => prev.slice(1));
+        return true;
+      } else {
+        setTeam((prev) => {
+          const copy = [...prev];
+          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+          return copy;
+        });
+        return false;
+      }
     }
-  }
-};
+  };
 
 
   const handlePlayerAttack = async (playerMove) => {
@@ -346,23 +443,68 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
     const npcSpeed = getStatValue(currentNpc, "speed", 50);
     playerFirst = playerSpeed >= npcSpeed;
   }
+  let npcFainted = false;
+  let playerFainted = false;
 
   // ===== EXECUTION =====
-  if (playerFirst) {
-    const npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
-    if (!npcFainted) {
-      await wait(3000);
-      const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
-      if (playerFainted) setAllowSwap(true);
+    if (playerFirst) {
+
+      if (
+        playerMove.category_name === "net-good-stats") {
+        // ✅ Apply stat changes only (no damage)
+        await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
+        await wait(1500);
+        setBattleMessage(`${currentPokemon.name} used ${playerMove.name}!`);
+        await wait(1000);
+      } else {
+        // ✅ Only do damage for non-status moves
+        npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
+        if (playerMove.category_name === "damage+raise"
+          || playerMove.category_name === "damage+lower")
+          await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
+      }
+      if (!npcFainted) {
+        await wait(3000);
+        if (npcMove.category_name === "net-good-stats") { 
+          await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
+          await wait(1500);
+          setBattleMessage(`${currentNpc.name} used ${npcMove.name}!`);
+          await wait(1000);
+        } else {
+          playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+          if (npcMove.category_name === "damage+raise"
+          || npcMove.category_name === "damage+lower")
+            await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
+        }
+      } else {
+        setAllowSwap(true);
+      }
     } else {
-      setAllowSwap(true);
-    }
-  } else {
-    const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
-    if (!playerFainted) {
-      await wait(3000);
-      await performAttack(currentPokemon, currentNpc, playerMove, true);
-    } else {
+      if (npcMove.category_name === "net-good-stats") {
+        await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
+        await wait(1500);
+        setBattleMessage(`${currentNpc.name} used ${npcMove.name}!`);
+        await wait(1500);
+      } else {
+        playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+        if (npcMove.category_name === "damage+raise"
+          || npcMove.category_name === "damage+lower")
+          await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
+      }
+      if (!playerFainted) {
+        await wait(3000);
+        if (playerMove.category_name === "net-good-stats") { 
+          await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
+          await wait(1500);
+          setBattleMessage(`${currentPokemon.name} used ${playerMove.name}!`);
+          await wait(1000);
+        } else {
+          playerFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
+          if (playerMove.category_name === "damage+raise"
+          || playerMove.category_name === "damage+lower")
+            await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
+        }
+      } else {
       setAllowSwap(true);
     }
   }
@@ -520,7 +662,9 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
           </div>
         }
         {!movesEnabled &&
-          <BattleMessage battleMessage={battleMessage} />
+          <div className="w-half border-2 border-black bg-white text-black p-2 text-center text-sm font-mono whitespace-pre-line rounded-md">
+            {battleMessage}
+          </div>
         }
       </div>
     </div>
