@@ -96,6 +96,13 @@ export const addNarate = async ({
   outcome,
   hpRemaining,
 }) => {
+  console.log("Adding narration with:", {
+    attacker,
+    move: "",
+    defender: "",
+    outcome: "",
+    hpRemaining: "",
+  });
   try {
     const res = await fetch(`${API_URL}/api/ai/comentate`, {
       method: "POST",
@@ -111,6 +118,8 @@ export const addNarate = async ({
 
     // Parse JSON exactly once
     const data = await res.json();
+
+    console.log("Narration response data:", data);
 
     // Return the same structure as backend
     return data; // e.g. { message: "Pidgeot unleashes a Hyper Beam..." }

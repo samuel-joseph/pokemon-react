@@ -124,33 +124,34 @@ const calculateDamage = (attacker, defender, move) => {
 
   const capitalize = (str) => str?.charAt(0).toUpperCase() + str?.slice(1);
 
-const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
-  let narrationText = "";
+  const handleNarration = async (attacker, move, defender, outcome, hpRemaining) => {
+    let narrationText = "";
 
-  // try {
-  //   const response = await addNarate({
-  //     attacker,
-  //     move,
-  //     defender,
-  //     outcome,
-  //     hpRemaining,
-  //   });
+    try {
+      const response = await addNarate({
+        attacker,
+        move,
+        defender,
+        outcome,
+        hpRemaining,
+      });
 
-  //   if (response?.message === "Failed to generate narration.") {
-  //     throw new Error("Backend failed to generate AI narration");
-  //   }
+      if (response?.message === "Failed to generate narration.") {
+        throw new Error("Backend failed to generate AI narration");
+      }
 
-  //   narrationText = response.message;
-  // } catch (err) {
-  //   console.warn("Using fallback narration:", err);
+      narrationText = response.message;
+    } catch (err) {
+      console.warn("Using fallback narration:", err);
+          // Make sure names are capitalized
+      const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
+      const attackerName = typeof attacker === "string" ? capitalize(attacker) : attacker.name;
+      const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
 
-    const outcomePhrase = outcome === "normal" ? "" : `It was ${outcome}.`;
+      narrationText = `${attackerName} used ${move} on ${defenderName}. ${outcomePhrase}`;
+  }
 
-    // Make sure names are capitalized
-    const attackerName = typeof attacker === "string" ? capitalize(attacker) : attacker.name;
-    const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
 
-    narrationText = `${attackerName} used ${move} on ${defenderName}. ${outcomePhrase}`;
   // }
 
   setBattleMessage(narrationText);
@@ -230,7 +231,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     const desc = change > 0 ? "rose!" : "fell!";
     return `${targetName}'s ${stat.name} ${desc}`;
   }).join(" ");
-  console.log("After ",updatedTarget.stats)
   setBattleMessage(messages);
   await wait(1000);
 
