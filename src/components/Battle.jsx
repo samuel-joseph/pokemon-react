@@ -69,11 +69,14 @@ const CHARGING_MOVE_IDS = [
 
   // Damage calculation helper with type effectiveness
   const calculateDamage = (attacker, defender, move) => {
+    
+
     if (!move || move.power == null) return 0;
     const effectiveness = (defender.types ?? []).reduce(
       (mult, t) => mult * (typeEffectiveness[move.type]?.[t] ?? 1),
       1
     );
+  
     const damage = move.power * effectiveness * (Math.random() * 0.15 + 0.925);
 
     return {
@@ -116,7 +119,7 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
 
   setBattleMessage(narrationText);
   // speakEleven(narrationText);
-  speakSynthesis(narrationText);
+  // speakSynthesis(narrationText);
 };
 
 
@@ -144,7 +147,7 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
 
     // setBattleMessage(`${attacker.name} used ${move.name}!`);
     
-  // if (move.id && RECHARGE_MOVE_IDS.includes(move.id)) attacker.recharging = true;
+    // attacker.recharging = true;
 
   // Accuracy check
   const hitRoll = Math.random() * 100;
@@ -176,6 +179,56 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
   // Move hits, calculate damage
   const { damage, effectiveness } = calculateDamage(attacker, defenderSide, move);
   const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
+  
+  if (move.drain) {
+  const drainAmount = Math.floor(damage * (Math.abs(move.drain) / 100));
+
+  setBattleMessage((prev) => {
+    if (move.drain > 0) {
+      return `${attacker.name} absorbed health!`;
+    } else {
+      return `${attacker.name} was hurt by recoil!`;
+    }
+  });
+
+  if (attackerIsPlayer) {
+    setTeam((prev) => {
+      const copy = [...prev];
+      const current = copy[0];
+      const maxHP = current.maxHP;
+      let newHP = current.currentHP ?? maxHP;
+
+      if (move.drain > 0) {
+        // Heal for % of damage
+        newHP = Math.min(newHP + drainAmount, maxHP);
+      } else {
+        // Recoil damage
+        newHP = Math.max(newHP - drainAmount, 0);
+      }
+
+      copy[0] = { ...current, currentHP: newHP };
+      return copy;
+    });
+  } else {
+    setNpcTeam((prev) => {
+      const copy = [...prev];
+      const current = copy[0];
+      const maxHP = current.maxHP;
+      let newHP = current.currentHP ?? maxHP;
+
+      if (move.drain > 0) {
+        newHP = Math.min(newHP + drainAmount, maxHP);
+      } else {
+        newHP = Math.max(newHP - drainAmount, 0);
+      }
+
+      copy[0] = { ...current, currentHP: newHP };
+      return copy;
+    });
+  }
+
+  await wait(1000);
+}
 
   // Super-effective background flash
   if (effectiveness === "super effective") {
@@ -273,101 +326,50 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
 };
 
 
-
-  // Player initiates a turn with a chosen move
   const handlePlayerAttack = async (playerMove) => {
-    if (!currentPokemon || !currentNpc || !movesEnabled) return;
-    setMovesEnabled(false);
-    setAllowSwap(false);
-    let npcMove = chooseNpcMove(currentNpc, currentPokemon);
+  if (!currentPokemon || !currentNpc || !movesEnabled) return;
+  setMovesEnabled(false);
+  setAllowSwap(false);
 
+  let npcMove = chooseNpcMove(currentNpc, currentPokemon);
 
-    // if (playerChargeMove) {
-    //   playerMove = playerChargeMove;
-    //   setPlayerChargeMove(null);
-    //   currentPokemon.charging = false;
-    // } else if (playerMove.id && CHARGING_MOVE_IDS.includes(playerMove.id)) {
-    //   currentPokemon.charging = true;
-    //   setPlayerChargeMove(playerMove);
-    //   setBattleMessage(`${currentPokemon.name} is charging ${playerMove.name}!`);
-    //   await wait(2000);
-    // }
+  // ===== TURN ORDER =====
+  const playerPrio = playerMove?.priority ?? 0;
+  const npcPrio = npcMove?.priority ?? 0;
+  let playerFirst;
+  if (playerPrio > npcPrio) playerFirst = true;
+  else if (playerPrio < npcPrio) playerFirst = false;
+  else {
+    const playerSpeed = getStatValue(currentPokemon, "speed", 50);
+    const npcSpeed = getStatValue(currentNpc, "speed", 50);
+    playerFirst = playerSpeed >= npcSpeed;
+  }
 
-    // if (npcChargeMove) {
-    //   npcMove = npcChargeMove;
-    //   setNpcChargeMove(null);
-    //   currentNpc.charging = false;
-    // } else if (npcMove.id && CHARGING_MOVE_IDS.includes(npcMove.id)) {
-    //   currentNpc.charging = true;
-    //   setNpcChargeMove(npcMoveMove);
-    //   setBattleMessage(`${currentPokemon.name} is charging ${playerMove.name}!`);
-    //   await wait(2000); // pause for message
-    // }
-
-    // let playerCharging = currentPokemon.charging || currentPokemon.recharging;
-    // let npcCharging = currentNpc.charging || currentNpc.recharging;
-
-    // decide order by priority first, then speed
-    const playerPrio = playerMove?.priority ?? 0;
-    const npcPrio = npcMove?.priority ?? 0;
-    let playerFirst;
-    if (playerPrio > npcPrio) playerFirst = true;
-    else if (playerPrio < npcPrio) playerFirst = false;
-    else {
-      const playerSpeed = getStatValue(currentPokemon, "speed", 50);
-      const npcSpeed = getStatValue(currentNpc, "speed", 50);
-      playerFirst = playerSpeed >= npcSpeed;
-    }
-
-    // Execute in order, stopping if target faints
-    if (playerFirst) {
-      // player attacks
-      // const npcFainted = playerCharging ?
-      //   false : await performAttack(currentPokemon, currentNpc, playerMove, true);
-      const npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
-      // if NPC still alive and has a move, counterattack
-      if (!npcFainted && npcMove) {
-        await wait(3000);
-        // const playerFainted = npcCharging ?
-        //   false :  await performAttack(currentNpc, currentPokemon, npcMove, false);
-        const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
-        if (playerFainted) {
-          // player died, allow swap if reserves exist
-          setAllowSwap(true);
-        }
-      } else {
-        // NPC fainted: allow swap or end
-        setAllowSwap(true);
-      }
+  // ===== EXECUTION =====
+  if (playerFirst) {
+    const npcFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
+    if (!npcFainted) {
+      await wait(3000);
+      const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+      if (playerFainted) setAllowSwap(true);
     } else {
-      // NPC attacks first
-      if (npcMove) {
-        // const playerFainted = npcCharging ?
-        //   false : await performAttack(currentNpc, currentPokemon, npcMove, false);
-        const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
-        if (!playerFainted) {
-          await wait(3000);
-          await performAttack(currentPokemon, currentNpc, playerMove, true);
-        } else {
-          // player's current fainted - allow swap
-          setAllowSwap(true);
-        }
-      } else {
-        // NPC had no move, player attacks
-        await performAttack(currentPokemon, currentNpc, playerMove, true);
-      }
-    }
-
-    // small gap before enabling controls again
-    await wait(HIDE_MOVE_TIMER);
-    // if (!currentPokemon.charging && !currentPokemon.recharging) {
-      setMovesEnabled(true);
       setAllowSwap(true);
-    // }
+    }
+  } else {
+    const playerFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+    if (!playerFainted) {
+      await wait(3000);
+      await performAttack(currentPokemon, currentNpc, playerMove, true);
+    } else {
+      setAllowSwap(true);
+    }
+  }
 
-    // if (currentPokemon.recharging) currentPokemon.recharging = false;
-    // if (currentNpc.recharging) currentNpc.recharging = false;
-  };
+  await wait(HIDE_MOVE_TIMER);
+  setMovesEnabled(true);
+  setAllowSwap(true);
+};
+
 
   // Swap Pokémon (by swapping array indices)
   const handleSwapPokemon = async (idx) => {
@@ -382,7 +384,7 @@ const handleNarration = async (attacker, move, defender, outcome, hpRemaining) =
       return newTeam;
     });
     const newPokemon = team[idx + 1].name;
-    await speakSynthesis(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
+    // await speakSynthesis(`Come back, ${previosPokemon}! Go, ${newPokemon}!`);
     // NPC gets a free attack after swap
     await wait(3000);
     if (npcTeam.length > 0) {
