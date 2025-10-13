@@ -69,15 +69,17 @@ const CHARGING_MOVE_IDS = [
 
   // Damage calculation helper with type effectiveness
   const calculateDamage = (attacker, defender, move) => {
-    
-
+    let hits = 1;
     if (!move || move.power == null) return 0;
     const effectiveness = (defender.types ?? []).reduce(
       (mult, t) => mult * (typeEffectiveness[move.type]?.[t] ?? 1),
       1
     );
-  
-    const damage = move.power * effectiveness * (Math.random() * 0.15 + 0.925);
+
+    if(move.max_hits && move.min_hits){
+      hits = Math.floor(Math.random() * (move.max_hits - move.min_hits + 1)) + move.min_hits;
+    }
+    const damage = (move.power * effectiveness * (Math.random() * 0.15 + 0.925)) * hits;
 
     return {
       damage: Math.floor(damage),
