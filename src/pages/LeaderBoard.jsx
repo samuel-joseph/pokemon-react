@@ -1,50 +1,39 @@
 import React, { useEffect, useState } from "react";
-import { getRecord } from "../services/pokemonService";
+import { getAllRecord } from "../services/recordService";
 
 const Leaderboard = () => {
   const [leaderboards, setLeaderboards] = useState([]);
+  const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const data = await getRecord();
+useEffect(() => {
+  const fetchLeaderboard = async () => {
+    try {
+      const data = await getAllRecord();
 
-        const formatted = data
-          .map((player) => {
-            const records = Array.isArray(player.record) ? player.record : [];
+      // Sort the leaderboard
+      const sorted = [...data].sort((a, b) => {
+        // 1️⃣ Compare by number of regions (record count)
+        const recordDiff = b.record.length - a.record.length;
+        if (recordDiff !== 0) return recordDiff;
 
-            const totalWins = records.reduce(
-              (sum, r) => sum + (r.win || 0),
-              0
-            );
+        // 2️⃣ If equal, compare by highest win count in any region
+        const aMaxWins = Math.max(...a.record.map(r => r.wins || 0));
+        const bMaxWins = Math.max(...b.record.map(r => r.wins || 0));
 
-            return {
-              name: player.name || "Unknown",
-              trophies: "🏆".repeat(totalWins),
-              totalWins,
-            };
-          })
-          .filter((player) => player.totalWins > 0)
-          .sort((a, b) => b.totalWins - a.totalWins);
+        return bMaxWins - aMaxWins;
+      });
 
-        setLeaderboards(formatted);
-      } catch (err) {
-        setError("Failed to load leaderboard data.");
-        console.error(err);
-      }
-    };
+      console.log("Sorted leaderboard:", sorted);
+      setLeaderboards(sorted);
+    } catch (err) {
+      setError("Failed to load leaderboard data.");
+      console.error(err);
+    }
+  };
 
-    fetchRecords();
-  }, []);
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-red-500 text-lg font-semibold">{error}</p>
-      </div>
-    );
-  }
+  fetchLeaderboard();
+}, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 py-10 px-4">
@@ -59,30 +48,66 @@ const Leaderboard = () => {
           </p>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {leaderboards.map((player, index) => (
-              <li
-                key={player.name}
-                className="flex justify-between items-center py-4 px-2 hover:bg-yellow-50 transition duration-200 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-bold text-gray-700">
-                    #{index + 1}
-                  </span>
-                  <span className="text-lg font-semibold text-gray-800 capitalize">
-                    {player.name}
-                  </span>
-                </div>
+            {leaderboards.map((trainer, index) => {
+              const totalWins = trainer.record.reduce(
+                (sum, r) => sum + (r.win || 0),
+                0
+              );
 
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-500 text-xl">
-                    {"🏆".repeat(player.totalWins)}
-                  </span>
-                  <span className="text-gray-500 font-medium text-sm">
-                    ({player.totalWins})
-                  </span>
-                </div>
-              </li>
-            ))}
+              return (
+                <li
+                  key={trainer.name}
+                  onClick={() =>
+                    setSelectedTrainer(
+                      selectedTrainer?.name === trainer.name ? null : trainer
+                    )
+                  }
+                  className="py-4 px-2 hover:bg-yellow-50 transition duration-200 rounded-lg cursor-pointer"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-bold text-gray-700">
+                        #{index + 1}
+                      </span>
+                      <span className="text-lg font-semibold text-gray-800 capitalize">
+                        {trainer.name}
+                      </span>
+                    </div>
+
+                    <span className="text-gray-500 font-medium text-sm">
+                      {"🏆".repeat(totalWins)}
+                    </span>
+                  </div>
+
+                  {/* Show details only if selected */}
+                  {selectedTrainer?.name === trainer.name && (
+                    <div className="mt-4 ml-6 border-t border-gray-300 pt-3 space-y-3">
+                      {trainer.record.map((data, i) => (
+                        <div
+                          key={i}
+                          className="bg-yellow-50 p-3 rounded-lg shadow-sm"
+                        >
+                          <p className="font-semibold text-gray-700">
+                            Region: {data.region}
+                          </p>
+                          <p className="text-gray-600">Wins: {"🏆".repeat(data.win)}</p>
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {data.pokemon.map((poke, idx) => (
+                              <img
+                                key={idx}
+                                src={poke.image}
+                                alt={poke.name}
+                                className="w-12 h-12 rounded-full border border-gray-300"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
