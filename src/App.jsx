@@ -3,12 +3,17 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Pokedex from "./pages/Pokedex";
 import Region from "./pages/Region";
 import ShowRegionPokemon from "./pages/ShowRegionPokemon";
-import Stadium from "./pages/Stadium/Stadium";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Logout from "./pages/Logout"
+import Stadium from "./pages/Stadium";
 import { Navigate } from "react-router-dom";
 import Leaderboard from "./pages/LeaderBoard";
+import { getToken } from "./services/authService";
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState( getToken() !== null )
 
   return (
     <Router>
@@ -22,6 +27,11 @@ const App = () => {
             <Link to="/pokedex" className="hover:text-yellow-300 font-semibold transition-colors">Pokédex</Link>
             <Link to="/region" className="hover:text-yellow-300 font-semibold transition-colors">Stadium</Link>
             <Link to="/leaderboard" className="hover:text-yellow-300 font-semibold transition-colors">Leader Board</Link>
+            {!isLoggedIn ? 
+              <Link to="/login" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log in</Link>
+              :
+              <Link to="/logout" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log out</Link>
+            }
           </div>
 
           {/* Mobile Hamburger */}
@@ -49,6 +59,11 @@ const App = () => {
             <Link to="/pokedex" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Pokédex</Link>
             <Link to="/region" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Stadium</Link>
             <Link to="/leaderboard" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Leader Board</Link>
+            {!isLoggedIn ? 
+              <Link to="/login" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log in</Link>
+              :
+              <Link to="/logout" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log out</Link>
+           }
           </div>
         )}
       </nav>
@@ -91,6 +106,9 @@ const App = () => {
           <Route path="/region" element={<Region />} />
           <Route path="/region/:regionName" element={<ShowRegionPokemon />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
 
           {/* If Stadium has no nested routes, just use: */}
           <Route path="/stadium" element={<Stadium />} />

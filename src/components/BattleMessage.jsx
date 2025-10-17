@@ -3,29 +3,33 @@ import { useEffect, useState } from "react";
 function BattleMessage({ battleMessage }) {
   const [displayText, setDisplayText] = useState("");
 
-  useEffect(() => {
-    if (!battleMessage) {
-      setDisplayText("");
-      return;
-    }
+  // useEffect(() => {
+  //   if (!battleMessage) {
+  //     setDisplayText("");
+  //     return;
+  //   }
 
-    setDisplayText(""); // reset immediately
-    let index = -1;
+  //   setDisplayText(""); // reset immediately
 
-    const interval = setInterval(() => {
-      // safety check
-      if (index >= battleMessage.length) {
-        clearInterval(interval);
-        return;
-      }
+  //   // Split message into sentences; fallback to full message if regex fails
+  //   const sentences = battleMessage.match(/[^.!?]+[.!?]?/g) || [battleMessage];
+  //   let index = 0;
 
-      // append current character
-      setDisplayText((prev) => prev + (battleMessage[index] || ""));
-      index++;
-    }, 40);
+  //   const interval = setInterval(() => {
+  //     if (index >= sentences.length) {
+  //       clearInterval(interval);
+  //       return;
+  //     }
 
-    return () => clearInterval(interval);
-  }, [battleMessage]);
+  //     const sentence = sentences[index];
+  //     if (sentence) {
+  //       setDisplayText((prev) => prev + sentence.trim() + " ");
+  //     }
+  //     index++;
+  //   }, 1000); // adjust speed between sentences
+
+  //   return () => clearInterval(interval);
+  // }, [battleMessage]);
 
   return (
     <div className="w-half border-2 border-black bg-white text-black p-2 text-center text-sm font-mono whitespace-pre-line rounded-md">

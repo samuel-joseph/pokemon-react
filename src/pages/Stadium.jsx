@@ -1,8 +1,8 @@
 import { useState } from "react";
-import TeamSelection from "../../components/TeamSelection";
-import Battle from "../../components/Battle";
-import BattleResult from "../../components/BattleResult";
-import { useTeam } from "../../components/TeamContext";
+import TeamSelection from "../components/TeamSelection";
+import Battle from "../components/Battle";
+import BattleResult from "../components/BattleResult";
+import { useTeam } from "../components/TeamContext";
 
 const Stadium = () => {
   const [stage, setStage] = useState("team");

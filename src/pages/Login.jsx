@@ -1,0 +1,57 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/authService";
+
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const res = await login(username, password);
+    if (res.token) {
+      setMessage("Login successful!");
+      navigate("/dashboard"); // protected route
+    } else {
+      setMessage(res.message || "Invalid credentials");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-6 rounded-xl shadow-md w-80"
+      >
+        <h2 className="text-xl font-semibold mb-4 text-center">Login</h2>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="border p-2 w-full mb-3 rounded"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border p-2 w-full mb-3 rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700"
+        >
+          Login
+        </button>
+        <p className="text-center text-sm text-gray-600 mt-3">{message}</p>
+      </form>
+    </div>
+  );
+};
+
+export default Login;

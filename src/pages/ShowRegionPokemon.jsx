@@ -9,14 +9,13 @@ function ShowRegionPokemon() {
   const [pokemon, setPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [playerNameInput, setPlayerNameInput] = useState("");
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
 
   const { inventory, addInventory, setRegion, setNpc, setNpcTeam, setInventory, name, setName } = useTeam();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!name || name.trim() === "" || showInstructions) return; // wait for name and skip while instructions showing
+    if (showInstructions) return; // wait for name and skip while instructions showing
 
     setInventory([]);
     setNpc([]);
@@ -51,40 +50,9 @@ function ShowRegionPokemon() {
     }
   };
 
-  const handleNameSubmit = (e) => {
-    e.preventDefault();
-    if (playerNameInput.trim() === "") return;
-    setName(playerNameInput.trim());
-    setShowInstructions(true); // show instruction screen next
-  };
-
   const handleContinue = () => {
     setShowInstructions(false);
   };
-
-  // 1️⃣ Ask for name first
-  if (!name || name.trim() === "") {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">Welcome, Trainer!</h2>
-        <form onSubmit={handleNameSubmit} className="flex flex-col items-center">
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={playerNameInput}
-            onChange={(e) => setPlayerNameInput(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
-          />
-          <button
-            type="submit"
-            className="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-          >
-            Start Journey
-          </button>
-        </form>
-      </div>
-    );
-  }
 
   // 2️⃣ Show instructions after name entered
   if (showInstructions) {

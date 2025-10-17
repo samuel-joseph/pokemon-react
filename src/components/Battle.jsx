@@ -41,10 +41,12 @@ const Battle = ({ onNext }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  const HIDE_MOVE_TIMER = 3500;
-  const INBETWEEN_HIT_TIME = 3000;
+  const HIDE_MOVE_TIMER = 2500;
+  const INBETWEEN_HIT_TIME = 2000;
   const POKEMON_ATTACK_TIME = 2500;
-  const BG_COLOR_TIME = 3200;
+  const BG_COLOR_TIME = 2500;
+  const FAINTED_DELAY = 1000;
+  const MESSAGE_DELAY = 1000;
 
 
 
@@ -155,7 +157,9 @@ const calculateDamage = (attacker, defender, move) => {
       const attackerName = typeof attacker === "string" ? capitalize(attacker) : attacker.name;
       const defenderName = typeof defender === "string" ? capitalize(defender) : defender.name;
 
-      narrationText = `${attackerName} used ${move} `;
+      const KO = hpRemaining <= 0 ? `${defenderName} fainted!` : ""
+
+      narrationText = `${attackerName} used ${move}. ${KO}`;
   }
 
 
@@ -239,10 +243,10 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     const desc = change > 0 ? "rose!" : "fell!";
     return `${targetName}'s used ${move.name} ${stat.name} ${desc}`;
   }).join(" ");
-  await wait(1500);
+  await wait(MESSAGE_DELAY);
   handleNarration(messages, "", "", "", "");
   // setBattleMessage(messages);
-  await wait(1500);
+  await wait(MESSAGE_DELAY);
 
   return updatedTarget;
 };
@@ -337,7 +341,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     }
 
     await wait(1000);
-    }
+  }
 
     // Super-effective background flash
     if (effectiveness === "super effective") {
@@ -393,7 +397,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       setNpcDamage(null);
 
       if (newHP <= 0) {
-        setBattleMessage(`${defenderSide.name} fainted!`);
         setInventory((prev) => [...prev, defenderSide]);
         setNpcTeam((prev) => prev.slice(1));
         return true;
@@ -419,7 +422,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       setPlayerDamage(null);
 
       if (newHP <= 0) {
-        setBattleMessage(`${defenderSide.name} fainted!`);
         setInventory((prev) => [...prev, defenderSide]);
         setTeam((prev) => prev.slice(1));
         return true;
@@ -471,7 +473,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
       }
       if (!npcFainted) {
-        await wait(3000);
+        await wait(FAINTED_DELAY);
         if (npcMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
         } else {
@@ -493,7 +495,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
       }
       if (!playerFainted) {
-        await wait(3000);
+        await wait(FAINTED_DELAY);
         if (playerMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
         } else {
@@ -539,7 +541,7 @@ const handleSwapPokemon = async (idx) => {
   setBattleMessage(`Come back, ${prevPokemon.name}! Go, ${newPokemonName}!`);
 
   // Wait for message to appear before NPC attack
-  await wait(2000);
+  await wait(MESSAGE_DELAY);
 
   // NPC attacks after swap
   if (npcTeam.length > 0 && currentNpc) {

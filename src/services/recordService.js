@@ -26,7 +26,7 @@ export const getRecord = async (name) => {
 export const updateRecord = async ({ name, record }) => {
   const token = authService.getToken();
   try {
-    const res = await fetch(`${API_URL}/record/${name}`, {
+    const res = await fetch(`${API_URL}/api/record/${name}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -44,6 +44,31 @@ export const updateRecord = async ({ name, record }) => {
     return data;
   } catch (err) {
     console.error("Error updating player:", err);
+    throw err;
+  }
+};
+
+export const incrementRegionWin = async ({ name, region, pokemon }) => {
+  const token = authService.getToken();
+  try {
+    const res = await fetch(`${API_URL}/api/record/${name}/update/${region}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ pokemon }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to update player");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Error updating record: ", err);
     throw err;
   }
 };
