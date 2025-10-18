@@ -30,7 +30,7 @@ const BattleResult = ({ outcome }) => {
   const handleWin = async () => {
     const token = getToken();
     // setInventory((prev) => [...prev, ...team]);
-    if (token) {
+    if (token && name!== "") {
       try {
         // Check existing records first
         const response = await getRecord(name);
@@ -40,13 +40,8 @@ const BattleResult = ({ outcome }) => {
           (r) => r.region.toLowerCase() === region.toLowerCase()
         );
 
-        const combined = [...inventory, ...team];
-
         // Remove duplicates by 'pokemon'
-        const pokemon = combined.filter(
-          (item, index, self) =>
-            index === self.findIndex((t) => t.pokemon === item.pokemon)
-        );
+        const pokemon = team
 
         if (regionExists) {
           await incrementRegionWin(name, region, pokemon);

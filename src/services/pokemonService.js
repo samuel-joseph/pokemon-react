@@ -72,3 +72,10 @@ export const addNarate = async ({
     return { message: "Failed to generate narration." };
   }
 };
+
+export const getMega = async (name) => {
+  const res = await fetch(`${API_URL}/api/mega/${name}`);
+  if (!res.ok) throw new Error(`Failed to fetch mega`);
+  const data = await res.json();
+  return data;
+};

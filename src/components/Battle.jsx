@@ -3,10 +3,11 @@ import { useTeam } from "./TeamContext";
 import pokeball from "../assets/pokeball.png";
 import { typeEffectiveness } from "../helper/typeEffectiveness";
 import { motion } from "framer-motion";
-import { addNarate } from "../services/pokemonService";
+import { addNarate, getMega } from "../services/pokemonService";
 import { speakEleven, speakSynthesis } from "../services/ttsService";
 import { typeColors } from "../helper/typeColor";
 import BattleMessage from "./BattleMessage";
+import Mega from "./Mega";
 
 
 
@@ -31,9 +32,17 @@ const Battle = ({ onNext }) => {
   const [npcHit, setNpcHit] = useState(false);
   const [npcDamage, setNpcDamage] = useState(null);
   const [playerDamage, setPlayerDamage] = useState(null);
+  const [showMegaAnimation, setShowMegaAnimation] = useState(false);
+  const [showMegaPrompt, setShowMegaPrompt] = useState(false);
+
 
   const [battleMessage, setBattleMessage] = useState("");
+  
+  const [allowNpcMega, setAllowNpcMega] = useState(true);
+  const [allowUserMage, setAllowUserMega] = useState(true);
 
+  const [defaultImage, setDefaultImage] = useState("");
+  const [megaImage, setMegaImage] = useState("");
 
 
   const currentPokemon = team[0];
@@ -62,9 +71,58 @@ const CHARGING_MOVE_IDS = [
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  useEffect(() => {
+  if (allowUserMage && currentPokemon?.canMega) {
+    setShowMegaPrompt(true);
+  }
+  }, [currentPokemon]);
+
+
   useEffect(() => { 
-      if (!currentPokemon || !currentNpc) onNext(!currentPokemon ? "lose" : "win")
-  },[currentNpc,currentPokemon, onNext])
+    if (!currentPokemon || !currentNpc) {
+    onNext(!currentPokemon ? "lose" : "win");
+    return;
+  }
+  const applyMegaForm = async () => {
+    if (!currentNpc?.canMega) return;
+
+    try {
+      const megaForm = await getMega(currentNpc.name); // fetch mega form data
+      if (!megaForm) return;
+      const defaultImg = currentNpc.sprite_front
+      console.log("Default is ", defaultImg)
+      console.log("Mega is ", megaForm.sprite_front)
+      setDefaultImage(defaultImg)
+      setMegaImage(megaForm.sprite_front)
+      setNpcTeam((prevTeam) => {
+        const copy = [...prevTeam];
+        copy[0] = {
+          ...copy[0], // keep existing properties like level, moves, status, etc.
+          name: megaForm.name,
+          currentHP: megaForm.currentHP,
+          maxHP: megaForm.maxHP,
+          sprite_back: megaForm.sprite_back,
+          sprite_front: megaForm.sprite_front,
+          stats: megaForm.stats,
+          types: megaForm.types,
+          canMega: false
+        };
+        return copy;
+      });
+      handleMegaEvolution(false)
+    } catch (err) {
+      console.error("Failed to apply NPC Mega:", err);
+    }
+  };
+
+  if(allowNpcMega) applyMegaForm();
+  }, [currentNpc, currentPokemon, onNext, allowNpcMega])
+
+  const handleMegaEvolution = (isPlayer) => {
+    setShowMegaAnimation(true);
+    setShowMegaPrompt(false)
+    isPlayer ? setAllowUserMega(false) : setAllowNpcMega(false)
+  };
 
   // helper: get a stat like speed
   const getStatValue = (poke, statName, fallback = 50) => {
@@ -543,12 +601,12 @@ const handleSwapPokemon = async (idx) => {
   await wait(MESSAGE_DELAY);
 
   // NPC attacks after swap
-  if (npcTeam.length > 0 && currentNpc) {
-    const npcMove = chooseNpcMove(currentNpc, prevPokemon);
-    if (npcMove) {
-      await performAttack(currentNpc, currentPokemon, npcMove, false);
-    }
-  }
+  // if (npcTeam.length > 0 && currentNpc) {
+  //   const npcMove = chooseNpcMove(currentNpc, prevPokemon);
+  //   if (npcMove) {
+  //     await performAttack(currentNpc, currentPokemon, npcMove, false);
+  //   }
+  // }
 
   // Restore state after everything resolves
   await wait(HIDE_MOVE_TIMER);
@@ -569,6 +627,40 @@ const handleSwapPokemon = async (idx) => {
     }, BG_COLOR_TIME);
   };
 
+
+  const handleUserMegaEvolve = async () => {
+  try {
+    setShowMegaPrompt(false);
+
+    const preMega = currentPokemon.sprite_front;
+    setDefaultImage(preMega);
+
+    const newData = await getMega(currentPokemon.name);
+    setMegaImage(newData.sprite_front);
+
+    setTeam((prevTeam) => {
+      const copy = [...prevTeam];
+      copy[0] = {
+        ...copy[0],
+        name: newData.name,
+        currentHP: newData.currentHP,
+        maxHP: newData.maxHP,
+        sprite_back: newData.sprite_back,
+        sprite_front: newData.sprite_front,
+        stats: newData.stats,
+        types: newData.types,
+        canMega: false,
+      };
+      return copy;
+    });
+
+    handleMegaEvolution(true);
+  } catch (err) {
+    console.error("Error during Mega Evolution:", err);
+  }
+};
+
+
   return (
     <div
       className="flex flex-col h-screen relative"
@@ -577,6 +669,20 @@ const handleSwapPokemon = async (idx) => {
         transition: "background-color 2s ease-in-out",
         paddingTop: "5%"
       }}>
+      
+
+      {showMegaAnimation && (
+        <Mega
+          frontImage={defaultImage}
+          megaFrontImage={megaImage}
+          onFinish={() => {
+            setShowMegaAnimation(false)
+          }}
+        />
+      )}
+
+
+
       {/* NPC Team Icons */}
       <div className="absolute top-4 left-4 flex space-x-2">
         {reserveNpc.map((poke, idx) => (
@@ -678,6 +784,34 @@ const handleSwapPokemon = async (idx) => {
             ))}
           </div>
         }
+
+        {showMegaPrompt && (
+          <div className="bg-white text-black p-6 rounded-2xl text-center shadow-lg">
+            <p className="mb-4 text-lg font-bold">Do you want to Mega Evolve?</p>
+            <div className="flex justify-center gap-6">
+              <button
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                onClick={ handleUserMegaEvolve }
+              >
+                Yes
+              </button>
+              <button
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => {
+                  setShowMegaPrompt(false);
+                  setCurrentPokemon((prev) => ({
+                    ...prev,
+                    canMega: false,
+                  }));
+                }}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        )}
+
+
         {!movesEnabled &&
           <div className="w-half border-2 border-black bg-white text-black p-2 text-center text-sm font-mono whitespace-pre-line rounded-md">
             {battleMessage}
