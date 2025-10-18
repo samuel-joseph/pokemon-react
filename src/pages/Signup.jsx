@@ -10,7 +10,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const { team, setTrophies, setName } = useTeam();
+  const { team, inventory, setTrophies, setName } = useTeam();
 
   const navigate = useNavigate();
 
@@ -23,7 +23,13 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const pokemon = team;
+    const combined = [...inventory, ...team];
+
+    // Remove duplicates by 'pokemon'
+    const pokemon = combined.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t.pokemon === item.pokemon)
+      );
       const res = await signup(username, password, pokemon);
       setMessage(res.message || "Signup successful!");
       setToken(res.token);

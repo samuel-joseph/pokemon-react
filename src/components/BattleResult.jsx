@@ -40,10 +40,18 @@ const BattleResult = ({ outcome }) => {
           (r) => r.region.toLowerCase() === region.toLowerCase()
         );
 
+        const combined = [...inventory, ...team];
+
+        // Remove duplicates by 'pokemon'
+        const pokemon = combined.filter(
+          (item, index, self) =>
+            index === self.findIndex((t) => t.pokemon === item.pokemon)
+        );
+
         if (regionExists) {
-          await incrementRegionWin(name, region, team);
+          await incrementRegionWin(name, region, pokemon);
         } else {
-          await updateRecord(name, { region, pokemon: team, win: 1 });
+          await updateRecord(name, { region, pokemon, win: 1 });
         }
 
         // Update trophy progress if region newly cleared
