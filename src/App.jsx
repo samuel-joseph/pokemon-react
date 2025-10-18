@@ -59,7 +59,7 @@ useEffect(() => {
     <Router>
       <nav className="bg-red-600 text-white shadow-md">
         <div className="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
-          <h1 className="text-xl font-bold">Pokémon App</h1>
+          <h1 className="text-xl font-bold">{isLoggedIn ? name : 'Pokémon App' }</h1>
           {/* Desktop Links */}
           <div className="hidden md:flex space-x-4">
             <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">Home | </Link>
@@ -112,7 +112,7 @@ useEffect(() => {
             path="/" 
             element={
               <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
-                <h1 className="text-5xl md:text-6xl font-bold text-red-500 mb-4 text-center">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">
                 <img 
                 src={pokeballImg} 
                 alt="Pokéball" 
