@@ -41,10 +41,10 @@ const Battle = ({ onNext }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  const HIDE_MOVE_TIMER = 2500;
-  const INBETWEEN_HIT_TIME = 2000;
-  const POKEMON_ATTACK_TIME = 2500;
-  const BG_COLOR_TIME = 2500;
+  const HIDE_MOVE_TIMER = 2500; //original 2500
+  const INBETWEEN_HIT_TIME = 2000;  //original 2000
+  const POKEMON_ATTACK_TIME = 2500; //original 2500
+  const BG_COLOR_TIME = 2500; //original 2500
   const FAINTED_DELAY = 1000;
   const MESSAGE_DELAY = 1000;
 
@@ -397,7 +397,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       setNpcDamage(null);
 
       if (newHP <= 0) {
-        setInventory((prev) => [...prev, defenderSide]);
         setNpcTeam((prev) => prev.slice(1));
         return true;
       } else {
@@ -576,6 +575,7 @@ const handleSwapPokemon = async (idx) => {
       style={{
         backgroundColor: bgColor,
         transition: "background-color 2s ease-in-out",
+        paddingTop: "5%"
       }}>
       {/* NPC Team Icons */}
       <div className="absolute top-4 left-4 flex space-x-2">

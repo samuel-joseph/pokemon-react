@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTeam } from "./TeamContext";
 import { regions } from "../helper/region";
 import { getToken } from "../services/authService";
-import { updateRecord, incrementRegionWin } from "../services/recordService";
+import { updateRecord, incrementRegionWin, getRecord } from "../services/recordService";
 
 const BattleResult = ({ outcome }) => {
   const navigate = useNavigate();
@@ -29,26 +29,21 @@ const BattleResult = ({ outcome }) => {
   // 🏆 Handle winning logic
   const handleWin = async () => {
     const token = getToken();
+    // setInventory((prev) => [...prev, ...team]);
     if (token) {
       try {
         // Check existing records first
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/record/${name}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const recordData = await response.json();
+        const response = await getRecord(name);
 
         // If player already has this region, increment its win count
-        const regionExists = recordData.record.some(
+        const regionExists = response.record.some(
           (r) => r.region.toLowerCase() === region.toLowerCase()
         );
 
         if (regionExists) {
-          await incrementRegionWin(name, region, token);
+          await incrementRegionWin(name, region, inventory);
         } else {
-          await updateRecord(name, { region, pokemon: team, win: 1 }, token);
+          await updateRecord(name, { region, pokemon: team, win: 1 });
         }
 
         // Update trophy progress if region newly cleared
@@ -61,16 +56,9 @@ const BattleResult = ({ outcome }) => {
 
       setTimeout(() => resetAndRedirect(), 3000);
     } else {
-      // 🧾 Guest user
-      const pokemon = team.map((poke) => ({
-        name: poke.name,
-        image: poke.image,
-        hp: poke.hp,
-      }));
-
-      navigate("/signup", {
-        state: { inventory, region, trophy, pokemon },
-      });
+      setTimeout(() => { 
+        navigate("/signup");
+      },3000)
     }
   };
 

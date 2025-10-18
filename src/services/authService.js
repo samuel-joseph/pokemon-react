@@ -1,12 +1,14 @@
+import { getRecord } from "./recordService";
+
 const API_URL = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL
   : "http://localhost:3000";
 
-export const signup = async (username, password, pokemonsUsed) => {
+export const signup = async (username, password, pokemon) => {
   const res = await fetch(`${API_URL}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-type": "application/json" },
-    body: JSON.stringify({ username, password, pokemonsUsed }),
+    body: JSON.stringify({ username, password, pokemon }),
   });
 
   const data = await res.json();
@@ -24,7 +26,7 @@ export const login = async (username, password) => {
   });
   const data = await res.json();
   if (res.ok && data.token) {
-    localStorage.setItem("token", data.token);
+    setToken(data.token);
   }
 
   if (!res.ok) {
@@ -33,8 +35,12 @@ export const login = async (username, password) => {
   return data;
 };
 
-export const logout = () => localStorage.removeItem("item");
+export const logout = () => localStorage.removeItem("token");
 
 export const getToken = () => {
   return localStorage.getItem("token");
+};
+
+export const setToken = (token) => {
+  return localStorage.setItem("token", token);
 };

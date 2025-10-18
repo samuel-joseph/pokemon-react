@@ -25,7 +25,7 @@ export const TeamProvider = ({ children }) => {
       }
 
       try {
-        const res = await getRecord();
+        const res = await getRecord(name);
         if (res && res.name && res.record?.length > 0) {
           setName(res.name);
 
@@ -127,6 +127,7 @@ export const TeamProvider = ({ children }) => {
         removeNpcTeam,
         addTrophy,
         trophies,
+        setTrophies,
         name,
         setName,
       }}

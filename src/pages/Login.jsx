@@ -1,19 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
+import { useTeam } from "../components/TeamContext";
+import { getRecord } from "../services/recordService";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const { setName, name, trophies, setTrophies } = useTeam();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     const res = await login(username, password);
     if (res.token) {
       setMessage("Login successful!");
-      navigate("/dashboard"); // protected route
+      navigate("/"); 
+      const data = await getRecord(username);
+
+      setName(data.name);
+      setTrophies(data.record.length);
     } else {
       setMessage(res.message || "Invalid credentials");
     }

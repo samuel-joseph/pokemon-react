@@ -1,67 +1,88 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { signup } from "../services/authService";
 import { useTeam } from "../components/TeamContext";
-import { updateRecord } from "../services/recordService";
+import { setToken } from "../services/authService";
+import { getRecord } from "../services/recordService";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const { inventory, region, trophy, name } = useTeam();
+  const [showForm, setShowForm] = useState(false);
+  const { inventory, setTrophies, setName } = useTeam();
 
-const handleSignup = async (e) => {
-  e.preventDefault();
-  try {
-    const pokemon = inventory
-    const res = await signup(username, password, pokemon);
+  const navigate = useNavigate();
 
-    setMessage(res.message || "Signup successful!");
+  useEffect(() => {
+    // small delay to make the intro feel smoother
+    const timer = setTimeout(() => setShowForm(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    // Only update record if signup succeeded
-    // if (res && res.user) {
-    //   await updateRecord({
-    //     name: res.user.username,
-    //     record: [{ region, win: trophy, pokemon: inventory }],
-    //   });
-    // }
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      const pokemon = inventory;
+      const res = await signup(username, password, pokemon);
+      setMessage(res.message || "Signup successful!");
+      setToken(res.token);
+      const data = await getRecord(username);
 
-  } catch (error) {
-    setMessage(error.message);
-  }
-};
-
+      setName(data.name);
+      setTrophies(data.record.length);
+      setTimeout(() => navigate("/"),2000)
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSignup}
-        className="bg-white p-6 rounded-xl shadow-md w-80"
-      >
-        <h2 className="text-xl font-semibold mb-4 text-center">Sign Up</h2>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border p-2 w-full mb-3 rounded"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border p-2 w-full mb-3 rounded"
-          required
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
-        >
-          Sign Up
-        </button>
-        <p className="text-center text-sm text-gray-600 mt-3">{message}</p>
-      </form>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-100 to-indigo-200 text-gray-800 px-4">
+      <div className="max-w-md bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-xl text-center">
+        <h1 className="text-2xl font-bold text-indigo-700 mb-2">
+          Welcome, Trainer!
+        </h1>
+        <p className="text-sm text-gray-600 mb-4">
+          Thank you for joining the battle, Trainer! ⚡
+          Your journey through the Pokémon world has just begun.
+          Sign up now to save your progress, unlock every region,
+          train the strongest team, face legendary champions,
+          and climb your way to the top of the global leaderboard! 🥇
+        </p>
+
+        {showForm ? (
+          <form onSubmit={handleSignup} className="mt-4">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="border border-gray-300 p-2 w-full mb-3 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border border-gray-300 p-2 w-full mb-3 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-indigo-600 text-white w-full py-2 rounded-lg hover:bg-indigo-700 transition"
+            >
+              Begin Your Journey
+            </button>
+            <p className="text-center text-sm text-gray-600 mt-3">{message}</p>
+          </form>
+        ) : (
+          <p className="text-indigo-600 font-semibold animate-pulse mt-4">
+            Preparing your adventure...
+          </p>
+        )}
+      </div>
     </div>
   );
 };

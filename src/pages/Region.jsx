@@ -5,12 +5,15 @@ import { regions } from "../helper/region";
 
 function Region() {
   const navigate = useNavigate();
-  const { trophies } = useTeam();
+  const { trophies, name } = useTeam();
   const [activeRegion, setActiveRegion] = useState(null);
 
   const handleRegionClick = (region) => {
-    navigate(`/region/${region.toLowerCase()}`); 
+    navigate(`/region/${region.toLowerCase()}`);
   };
+
+  const unlockedRegions = regions.slice(0, trophies + 1);
+  const lastUnlockedRegion = unlockedRegions[unlockedRegions.length - 1];
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center justify-center">
@@ -19,18 +22,42 @@ function Region() {
       </h1>
 
       <div className="flex flex-col justify-center w-1/2 gap-4">
-        {regions.slice(0, trophies+1).map((region) => (
-          <button
-            key={region}
-            onClick={() => handleRegionClick(region)}
-            className={`px-6 py-3 rounded-lg font-semibold text-red-600 bg-white shadow-md hover:bg-red-200 transition-colors ${
-              activeRegion === region ? "bg-red-600 text-white" : ""
-            }`}
-          >
-            {region}
-          </button>
-        ))}
+        {unlockedRegions.map((region) => {
+          const isLast = region === lastUnlockedRegion;
+          return (
+            <button
+              key={region}
+              onClick={() => handleRegionClick(region)}
+              onMouseEnter={() => setActiveRegion(region)}
+              onMouseLeave={() => setActiveRegion(null)}
+              className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-500
+                ${
+                  isLast
+                    ? "bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 animate-gradient text-white hover:scale-105"
+                    : "bg-white text-red-600 hover:bg-red-200"
+                }
+                ${activeRegion === region ? "scale-105" : ""}
+              `}
+            >
+              {region}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Gradient animation keyframes */}
+      <style>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 4s ease infinite;
+        }
+      `}</style>
     </div>
   );
 }

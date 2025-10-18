@@ -1,13 +1,20 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/authService"
+import { useTeam } from "../components/TeamContext";
 
 const Logout = () => {
   const navigate = useNavigate();
+  const {
+    setTrophies,
+    setName
+  } = useTeam();
 
   useEffect(() => {
     logout();
-    navigate("/login");
+    setName("");
+    setTrophies(0);
+    navigate("/");
   }, [navigate]);
 
   return (

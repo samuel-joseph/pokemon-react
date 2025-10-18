@@ -23,7 +23,7 @@ export const getRecord = async (name) => {
   return data;
 };
 
-export const updateRecord = async ({ name, record }) => {
+export const updateRecord = async (name, { record }) => {
   const token = authService.getToken();
   try {
     const res = await fetch(`${API_URL}/api/record/${name}`, {
