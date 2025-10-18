@@ -10,7 +10,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const { inventory, setTrophies, setName } = useTeam();
+  const { team, setTrophies, setName } = useTeam();
 
   const navigate = useNavigate();
 
@@ -23,7 +23,7 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const pokemon = inventory;
+      const pokemon = team;
       const res = await signup(username, password, pokemon);
       setMessage(res.message || "Signup successful!");
       setToken(res.token);
