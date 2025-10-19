@@ -126,15 +126,13 @@ const App = () => {
       </nav>
 
       {/* Page Content */}
-      <main className="max-w-6xl mx-auto">
+      <main className="w-full max-w-4xl mx-auto px-4">
         <Routes>
           <Route 
             path="/" 
             element={
-              <div className="flex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-centerlex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-center md:bg-cover bg-contain
-              bg-[position:center_top_20%] sm:bg-center
-              "
-              >
+              <div className="flex flex-col items-center justify-center text-center min-h-[60vh] bg-no-repeat bg-center md:bg-cover bg-contain bg-[position:center_top_20%] sm:bg-center">
+
                 <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">Pokémon App
                 </h1>
                 {rank1 && (
