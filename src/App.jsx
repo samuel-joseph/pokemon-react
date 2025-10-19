@@ -111,7 +111,15 @@ useEffect(() => {
           <Route 
             path="/" 
             element={
-              <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
+              <div className="flex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-centerlex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-center md:bg-cover bg-contain
+              bg-[position:center_top_20%] sm:bg-center
+              "
+                style={
+                  {
+                    backgroundImage: `url('/src/assets/background.png')` ,
+                    backgroundSize: 'contain'
+                  }}
+              >
                 <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">
                 <img 
                 src={pokeballImg} 
