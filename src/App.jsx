@@ -14,17 +14,34 @@ import { getToken, logout } from "./services/authService";
 import { useTeam } from "./components/TeamContext";
 import { getAllRecord } from "./services/recordService";
 import pokeballImg from "./assets/pokeball.png"
+import LoadingScreen from "./components/LoadingScreen"
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { name } = useTeam()
   const [rank1, setRank1] = useState("");
+
+  const [serverReady, setServerReady] = useState(false);
+
   
-useEffect(() => {
+  useEffect(() => {
+  
+    const checkServer = async () => {
+    try {
+      const res = await fetch(`${API_URL}/healthz`);
+      if (res.ok) setServerReady(true);
+    } catch (err) {
+      console.error("Server not ready yet...");
+    }
+  };
+
   const checkToken = () => {
     const token = getToken();
     if (token && name) setIsLoggedIn(true)
+    else logout();
   };
 
   const getRankOne = async () => {
@@ -37,14 +54,14 @@ useEffect(() => {
   };
 
   // Run immediately
-  checkToken();
-  getRankOne();
-
+    checkToken();
+    getRankOne();
+    checkServer();
   // Re-run on token changes in other tabs
   window.addEventListener("storage", checkToken);
 
   // Re-run periodically to catch manual localStorage changes
-  const interval = setInterval(checkToken, 1000); // 1s is enough
+  const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
 
   return () => {
     window.removeEventListener("storage", checkToken);
@@ -53,6 +70,9 @@ useEffect(() => {
 }, [name]); // Add `name` as dependency so it sees latest name
 
 
+  if (!serverReady) {
+    return <LoadingScreen />;
+  }
 
 
   return (
@@ -93,9 +113,9 @@ useEffect(() => {
         {isOpen && (
           <div className="md:hidden px-4 pb-4 space-y-2 bg-red-600">
             <Link to="/" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Home</Link>
-            <Link to="/pokedex" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Pokédex</Link>
             <Link to="/region" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Stadium</Link>
             <Link to="/leaderboard" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Leader Board</Link>
+            <Link to="/pokedex" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Pokédex</Link>
             {!isLoggedIn ? 
               <Link to="/login" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log in</Link>
               :
