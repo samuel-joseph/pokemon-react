@@ -30,44 +30,44 @@ const App = () => {
   useEffect(() => {
   
     const checkServer = async () => {
-    try {
-      const res = await fetch(`${API_URL}/healthz`);
-      if (res.ok) setServerReady(true);
-    } catch (err) {
-      console.error("Server not ready yet...");
-    }
-  };
+      try {
+        const res = await fetch(`${API_URL}/healthz`);
+        if (res.ok) setServerReady(true);
+      } catch (err) {
+        console.error("Server not ready yet...");
+      }
+    };
 
-  const checkToken = () => {
-    const token = getToken();
-    if (token && name) setIsLoggedIn(true)
-    else logout();
-  };
+    const checkToken = () => {
+      const token = getToken();
+      if (token) setIsLoggedIn(true)
+      else logout();
+    };
 
-  const getRankOne = async () => {
-    try {
-      const data = await getAllRecord();
-      if (data?.length > 0) setRank1(data[0].name);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const getRankOne = async () => {
+      try {
+        const data = await getAllRecord();
+        if (data?.length > 0) setRank1(data[0].name);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  // Run immediately
-    checkToken();
-    getRankOne();
-    checkServer();
-  // Re-run on token changes in other tabs
-  window.addEventListener("storage", checkToken);
+    // Run immediately
+      checkToken();
+      getRankOne();
+      checkServer();
+    // Re-run on token changes in other tabs
+    window.addEventListener("storage", checkToken);
 
-  // Re-run periodically to catch manual localStorage changes
-  const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
+    // Re-run periodically to catch manual localStorage changes
+    const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
 
-  return () => {
-    window.removeEventListener("storage", checkToken);
-    clearInterval(interval);
-  };
-}, [name]); // Add `name` as dependency so it sees latest name
+    return () => {
+      window.removeEventListener("storage", checkToken);
+      clearInterval(interval);
+    };
+  }, [name]); // Add `name` as dependency so it sees latest name
 
 
   if (!serverReady) {

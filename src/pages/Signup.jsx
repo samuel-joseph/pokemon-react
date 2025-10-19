@@ -23,12 +23,13 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-    const combined = [...inventory, ...team];
+      const combined = [...inventory, ...team];
+      console.log("What is pokemon pre signup: ",combined)
 
     // Remove duplicates by 'pokemon'
     const pokemon = combined.filter(
         (item, index, self) =>
-          index === self.findIndex((t) => t.pokemon === item.pokemon)
+          index === self.findIndex((t) => t.name === item.name)
       );
       const res = await signup(username, password, pokemon);
       setMessage(res.message || "Signup successful!");

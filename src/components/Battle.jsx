@@ -44,12 +44,20 @@ const Battle = ({ onNext }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  const HIDE_MOVE_TIMER = 2000; //original 2500
-  const INBETWEEN_HIT_TIME = 1500;  //original 2000
-  const POKEMON_ATTACK_TIME = 2000; //original 2500
-  const BG_COLOR_TIME = 2000; //original 2500
-  const FAINTED_DELAY = 1000;
-  const MESSAGE_DELAY = 1500;
+  // const HIDE_MOVE_TIMER = 2000; 
+  // const INBETWEEN_HIT_TIME = 1500;
+  // const POKEMON_ATTACK_TIME = 2000;
+  // const BG_COLOR_TIME = 2000;
+  // const FAINTED_DELAY = 1000;
+  // const MESSAGE_DELAY = 1500;
+
+  //for test
+  const HIDE_MOVE_TIMER = 50; 
+  const INBETWEEN_HIT_TIME = 50;  
+  const POKEMON_ATTACK_TIME = 50; 
+  const BG_COLOR_TIME = 50; 
+  const FAINTED_DELAY = 50;
+  const MESSAGE_DELAY = 50;
 
 
 
@@ -501,14 +509,14 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       setNpcHit(newHP<=0);
 
       setNpcDamage(damage);
-      await wait(1000);
+      await wait(700);
       setNpcDamage(null);
       setNpcTeam((prev) => {
         const copy = [...prev];
         if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
         return copy;
       });
-      await wait(1000)
+      await wait(700)
       if (newHP <= 0) {
         setNpcTeam((prev) => prev.slice(1));
         setNpcHit(false)
@@ -810,13 +818,14 @@ const handleSwapPokemon = async (idx) => {
 };
 
 
+ 
+
   return (
     <div
       className="flex flex-col h-screen relative"
       style={{
         backgroundColor: bgColor,
         transition: "background-color 2s ease-in-out",
-        paddingTop: "5%"
       }}>
       
 
@@ -874,7 +883,12 @@ const handleSwapPokemon = async (idx) => {
         <motion.img
           src={currentNpc?.sprite_front}
           alt={currentNpc?.name}
-          className="w-32 h-32 object-contain sm:w-40 sm:h-40 ml-8"
+          className={`object-contain ${
+            currentNpc?.name.toLowerCase().includes("mega") ||
+            currentNpc?.name.toLowerCase().includes("ash")
+            ? "w-48 h-48 sm:w-56 sm:h-56"
+            : "w-32 h-32 sm:w-40 sm:h-40"
+          }`}
           style={{ opacity: npcHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
           animate={npcAttacking ? { x: -50, y: 50 } : { x: 0 }}
           transition={{ duration: 0.5, yoyo: 1 }}
@@ -887,7 +901,12 @@ const handleSwapPokemon = async (idx) => {
           <motion.img
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
-            className="w-32 h-32 object-contain sm:w-40 sm:h-40"
+              className={`object-contain ${
+              currentPokemon?.name.toLowerCase().includes("mega") ||
+              currentPokemon?.name.toLowerCase().includes("ash")
+                ? "w-56 h-56 sm:w-48 sm:h-48"
+                : "w-32 h-32 sm:w-40 sm:h-40"
+            }`}
             style={{ opacity: isTeamHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
             animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
             transition={{ duration: 0.5 }}
