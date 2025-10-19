@@ -30,44 +30,44 @@ const App = () => {
   useEffect(() => {
   
     const checkServer = async () => {
-      try {
-        const res = await fetch(`${API_URL}/healthz`);
-        if (res.ok) setServerReady(true);
-      } catch (err) {
-        console.error("Server not ready yet...");
-      }
-    };
+    try {
+      const res = await fetch(`${API_URL}/healthz`);
+      if (res.ok) setServerReady(true);
+    } catch (err) {
+      console.error("Server not ready yet...");
+    }
+  };
 
-    const checkToken = () => {
-      const token = getToken();
-      if (token) setIsLoggedIn(true)
-      else logout();
-    };
+  const checkToken = () => {
+    const token = getToken();
+    if (token && name) setIsLoggedIn(true)
+    else logout();
+  };
 
-    const getRankOne = async () => {
-      try {
-        const data = await getAllRecord();
-        if (data?.length > 0) setRank1(data[0].name);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const getRankOne = async () => {
+    try {
+      const data = await getAllRecord();
+      if (data?.length > 0) setRank1(data[0].name);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    // Run immediately
-      checkToken();
-      getRankOne();
-      checkServer();
-    // Re-run on token changes in other tabs
-    window.addEventListener("storage", checkToken);
+  // Run immediately
+    checkToken();
+    getRankOne();
+    checkServer();
+  // Re-run on token changes in other tabs
+  window.addEventListener("storage", checkToken);
 
-    // Re-run periodically to catch manual localStorage changes
-    const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
+  // Re-run periodically to catch manual localStorage changes
+  const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
 
-    return () => {
-      window.removeEventListener("storage", checkToken);
-      clearInterval(interval);
-    };
-  }, [name]); // Add `name` as dependency so it sees latest name
+  return () => {
+    window.removeEventListener("storage", checkToken);
+    clearInterval(interval);
+  };
+}, [name]); // Add `name` as dependency so it sees latest name
 
 
   if (!serverReady) {
@@ -78,7 +78,7 @@ const App = () => {
   return (
     <Router>
       <nav className="bg-red-600 text-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
+        <div className="max-w-6xl mx-auto px-4 flex justify-between h-16">
           <h1 className="text-xl font-bold">{isLoggedIn ? name : 'Pokémon App' }</h1>
           {/* Desktop Links */}
           <div className="hidden md:flex space-x-4">
@@ -134,53 +134,14 @@ const App = () => {
               <div className="flex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-centerlex flex-col items-center justify-center min-h-screen text-center bg-no-repeat bg-center md:bg-cover bg-contain
               bg-[position:center_top_20%] sm:bg-center
               "
-                style={
-                  {
-                    backgroundImage: `url('/src/assets/background.png')` ,
-                    backgroundSize: 'contain'
-                  }}
               >
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">
-                <img 
-                src={pokeballImg} 
-                alt="Pokéball" 
-                className="inline-block h-1em w-1em align-text-bottom ml-2 animate-bounce"
-                style={{ height: "1em", width: "1em" }} 
-                  />{" "}Pokémon App{" "}
-                  <img 
-                    src={pokeballImg} 
-                    alt="Pokéball" 
-                    className="inline-block h-1em w-1em align-text-bottom ml-2 animate-bounce"
-                    style={{ height: "1em", width: "1em", animationDelay: ".5s"  }} 
-                  />
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">Pokémon App
                 </h1>
-
-                {rank1 !== "" && <p className="text-3xl md:text-4xl font-extrabold text-yellow-400 text-center">
-                  🔥 Rank #1:{" "}
-                  <span className="rank1-animated px-2 py-1 rounded-lg shadow-lg">
-                    {rank1}
-                  </span>{" "}
-                  🔥
-                </p>
-                }
-                {/* Add this at the bottom of your component */}
-                <style>{`
-                  @keyframes gradientGlow {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                  }
-
-                  .rank1-animated {
-                    font-weight: 800;
-                    background: linear-gradient(270deg, #ff4d4d, #ffd700, #ff69b4, #ff4d4d);
-                    background-size: 600% 600%;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    animation: gradientGlow 4s ease infinite;
-                    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 69, 0, 0.6);
-                  }
-                `}</style>
+                {rank1 && (
+                  <div className="bg-yellow-400 text-black font-bold py-2 px-4 shadow-md animate-pulse text-center">
+                    🔥 Rank #1: {rank1} 🔥
+                  </div>
+                )}
 
                 {isLoggedIn && <Link
                   to="/profile"
