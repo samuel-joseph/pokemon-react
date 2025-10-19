@@ -11,7 +11,7 @@ const Mega = ({ frontImage, megaFrontImage, onFinish }) => {
     timers.push(
       setTimeout(() => {
         setPhase("mega");
-      }, 4000)
+      }, 2000)
     );
 
     // Finish after 3s (or whatever total duration you want)
@@ -19,7 +19,7 @@ const Mega = ({ frontImage, megaFrontImage, onFinish }) => {
       setTimeout(() => {
         setPhase("done");
         onFinish();
-      }, 8000)
+      }, 5000)
     );
 
     return () => timers.forEach(clearTimeout);
@@ -41,7 +41,7 @@ const Mega = ({ frontImage, megaFrontImage, onFinish }) => {
               key="before"
               src={frontImage}
               alt="Before Mega"
-              className="w-64 h-64 sm:w-96 sm:h-96"
+              className="w-40 h-40 sm:w-56 sm:h-56"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ opacity: 0 }}
@@ -53,7 +53,7 @@ const Mega = ({ frontImage, megaFrontImage, onFinish }) => {
               key="after"
               src={megaFrontImage}
               alt="Mega Evolution"
-              className="w-64 h-64 sm:w-96 sm:h-96"
+              className="w-40 h-40 sm:w-56 sm:h-56"
               initial={{ scale: 0 }}
               animate={{ scale: 1.5 }}
               exit={{ opacity: 0 }}

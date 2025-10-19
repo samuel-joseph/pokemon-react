@@ -90,8 +90,6 @@ const CHARGING_MOVE_IDS = [
       const megaForm = await getMega(currentNpc.name); // fetch mega form data
       if (!megaForm) return;
       const defaultImg = currentNpc.sprite_front
-      console.log("Default is ", defaultImg)
-      console.log("Mega is ", megaForm.sprite_front)
       setDefaultImage(defaultImg)
       setMegaImage(megaForm.sprite_front)
       setNpcTeam((prevTeam) => {
@@ -308,17 +306,62 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
   return updatedTarget;
 };
+  
+  
+  
+  
+  const applyStatusEffect = (pokemon, move) => {
+  if (!move.ailment_name || pokemon.status) return; // no status move or already affected
 
+    const ailment = move.ailment_name.toLowerCase();
+    const damage_ailment = move.category_name === "damage+ailment";
+    const roll = Math.random() * 100;
 
+  // Default chance: 100% if none specified
+  const chance = move.ailment_chance ?? 100;
+
+  if (damage_ailment && roll > chance) return; 
+  
+  switch (ailment) {
+    case "paralysis":
+      pokemon.status = "paralyzed";
+      pokemon.speed = Math.floor(pokemon.speed * 0.5);
+      break;
+
+    case "burn":
+      pokemon.status = "burned";
+      pokemon.attack = Math.floor(pokemon.attack * 0.5);
+      break;
+
+    case "poison":
+      pokemon.status = "poisoned";
+      break;
+
+    case "badly-poisoned":
+      pokemon.status = "badly poisoned";
+      pokemon.toxicCounter = 1;
+      break;
+
+    case "sleep":
+      pokemon.status = "asleep";
+      pokemon.sleepTurns = Math.floor(Math.random() * 3) + 1;
+      break;
+
+    case "freeze":
+      pokemon.status = "frozen";
+      break;
+
+    default:
+      break;
+  }
+};
 
 
 
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
     if (!attacker || !move || !defenderSide) return false;
 
-      // setBattleMessage(`${attacker.name} used ${move.name}!`);
-      
-      // attacker.recharging = true;
+    
 
     // Accuracy check
     const hitRoll = Math.random() * 100;
@@ -343,24 +386,37 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         await wait(INBETWEEN_HIT_TIME);
         setNpcAttacking(false);
       }
-
       return false; // attack missed
     }
 
+    // --- Apply ailment if move has one ---
+    if (move.damage_class === "status" && move.ailment_name) {
+      if (attackerIsPlayer) {
+        setNpcTeam((prev) => {
+          const copy = [...prev];
+          const current = copy[0];
+          const updated = { ...current };
+          applyStatusEffect(updated, move);
+          copy[0] = updated;
+          return copy;
+        });
+      } else {
+        setTeam((prev) => {
+          const copy = [...prev];
+          const current = copy[0];
+          const updated = { ...current };
+          applyStatusEffect(updated, move);
+          copy[0] = updated;
+          return copy;
+        });
+      }
+    }
     // Move hits, calculate damage
     const { damage, effectiveness } = calculateDamage(attacker, defenderSide, move);
     const newHP = Math.max((defenderSide.currentHP ?? defenderSide.maxHP) - damage, 0);
     
     if (move.drain !== 0) {
     const drainAmount = Math.floor(damage * (Math.abs(move.drain) / 100));
-
-    // setBattleMessage((prev) => {
-    //   if (move.drain > 0) {
-    //     return `${attacker.name} absorbed health!`;
-    //   } else {
-    //     return `${attacker.name} was hurt by recoil!`;
-    //   }
-    // });
 
     if (attackerIsPlayer) {
       setTeam((prev) => {
@@ -499,7 +555,46 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
   setMovesEnabled(false);
   setAllowSwap(false);
 
-  let npcMove = chooseNpcMove(currentNpc, currentPokemon);
+    let npcMove = chooseNpcMove(currentNpc, currentPokemon);
+    let npcFainted = false;
+    let playerFainted = false;
+    const playerStatus = processStatusEffects(currentPokemon, true);
+    const npcStatus = processStatusEffects(currentNpc, false);
+
+    // If fainted from poison/burn etc., handle faint
+    if (playerStatus.fainted) {
+      setTeam((prev) => prev.slice(1));
+      return;
+    }
+    if (npcStatus.fainted) {
+      setNpcTeam((prev) => prev.slice(1));
+      return;
+    }
+
+    // Skip turn if paralyzed/asleep/frozen
+    if (playerStatus.skip) {
+      await wait(FAINTED_DELAY);
+      playerFainted = false;
+      npcFainted = await performAttack(currentNpc, currentPokemon, npcMove, false);
+
+      await wait(HIDE_MOVE_TIMER);
+      setMovesEnabled(true);
+      setAllowSwap(true);
+      setBattleMessage("");
+      return;
+    }
+
+    if (npcStatus.skip) {
+      await wait(FAINTED_DELAY);
+      npcFainted = false;
+      playerFainted = await performAttack(currentPokemon, currentNpc, playerMove, true);
+
+      await wait(HIDE_MOVE_TIMER);
+      setMovesEnabled(true);
+      setAllowSwap(true);
+      setBattleMessage("");
+      return;
+    }
 
   // ===== TURN ORDER =====
   const playerPrio = playerMove?.priority ?? 0;
@@ -512,8 +607,6 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     const npcSpeed = getStatValue(currentNpc, "speed", 50);
     playerFirst = playerSpeed >= npcSpeed;
   }
-  let npcFainted = false;
-  let playerFainted = false;
 
   // ===== EXECUTION =====
     if (playerFirst) {
@@ -570,7 +663,74 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
   setMovesEnabled(true);
   setAllowSwap(true);
   setBattleMessage("");
+  };
+  
+
+
+const processStatusEffects = (pokemon, isPlayer = true) => {
+  if (!pokemon.status) return { skip: false, fainted: false };
+
+  const updated = { ...pokemon };
+
+  switch (updated.status) {
+    case "burned":
+      updated.currentHP -= Math.floor(updated.maxHP / 16);
+      break;
+    case "poisoned":
+      updated.currentHP -= Math.floor(updated.maxHP / 8);
+      break;
+    case "badly poisoned":
+      updated.currentHP -= Math.floor((updated.maxHP / 16) * (updated.toxicCounter || 1));
+      updated.toxicCounter = (updated.toxicCounter || 1) + 1;
+      break;
+    case "paralyzed":
+      if (Math.random() < 0.25) {
+        setBattleMessage(`${updated.name} is paralyzed! It can’t move!`);
+        return { skip: true, fainted: false };
+      }
+      break;
+    case "asleep":
+      if (updated.sleepTurns > 0) {
+        updated.sleepTurns--;
+        setBattleMessage(`${updated.name} is fast asleep...`);
+        return { skip: true, fainted: false };
+      } else {
+        updated.status = null; // woke up
+      }
+      break;
+    case "frozen":
+      if (Math.random() < 0.2) {
+        updated.status = null;
+        setBattleMessage(`${updated.name} thawed out!`);
+      } else {
+        setBattleMessage(`${updated.name} is frozen solid!`);
+        return { skip: true, fainted: false };
+      }
+      break;
+    default:
+      break;
+  }
+
+  const fainted = updated.currentHP <= 0;
+
+  // Update the team state
+  if (isPlayer) {
+    setTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = updated;
+      return copy;
+    });
+  } else {
+    setNpcTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = updated;
+      return copy;
+    });
+  }
+
+  return { skip: false, fainted };
 };
+
 
 
 const handleSwapPokemon = async (idx) => {
@@ -633,6 +793,9 @@ const handleSwapPokemon = async (idx) => {
     setShowMegaPrompt(false);
 
     const preMega = currentPokemon.sprite_front;
+    const hpLost = currentPokemon.maxHP - currentPokemon.currentHP
+    const hpLostPercentage = (hpLost / currentPokemon.maxHP) * 100;
+    const reduceHp = (hpLostPercentage/100) * currentPokemon.maxHP
     setDefaultImage(preMega);
 
     const newData = await getMega(currentPokemon.name);
@@ -643,7 +806,7 @@ const handleSwapPokemon = async (idx) => {
       copy[0] = {
         ...copy[0],
         name: newData.name,
-        currentHP: newData.currentHP,
+        currentHP: Math.max(newData.currentHP - reduceHp, 0),
         maxHP: newData.maxHP,
         sprite_back: newData.sprite_back,
         sprite_front: newData.sprite_front,
@@ -694,7 +857,16 @@ const handleSwapPokemon = async (idx) => {
       <div className="flex flex-row justify-center items-center mt-8 gap-16">
         <div className="text-left mb-2">
           <h3 className="text-xl font-bold">{currentNpc?.name}</h3>
-          <p>Level {currentNpc?.level || 50}</p>
+          <p>Level {currentNpc?.level || 50}</p>  {currentNpc?.status && (<p className={`inline-block mt-1 text-xs font-bold uppercase text-white  ${
+            currentNpc.status === "paralyzed" ? "text-yellow-400" :
+            currentNpc.status === "burned" ? "text-red-500" :
+            currentNpc.status === "frozen" ? "text-blue-300" :
+            currentNpc.status === "poisoned" ? "text-purple-400" :
+            "text-white"
+          } drop-shadow`}>
+              {currentNpc.status}
+            </p>
+        )}
           <div className="w-full max-w-xs h-4 bg-gray-300 rounded-full mt-1">
             <div
               className="h-4 bg-green-500 rounded-full transition-all duration-500"
@@ -737,6 +909,17 @@ const handleSwapPokemon = async (idx) => {
           <div className="flex flex-col">
             <h3 className="text-lg font-bold mt-2">{currentPokemon?.name}</h3>
             <p>Level {currentPokemon?.level || 50}</p>
+          {currentPokemon?.status && (
+            <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold uppercase ${
+            currentNpc.status === "paralyzed" ? "text-yellow-400" :
+            currentNpc.status === "burned" ? "text-red-500" :
+            currentNpc.status === "frozen" ? "text-blue-300" :
+            currentNpc.status === "poisoned" ? "text-purple-400" :
+            "text-white"
+          } drop-shadow`}>
+              {currentPokemon.status}
+            </span>
+          )}
             <div className="w-full max-w-xs h-4 bg-gray-300 rounded-full mt-1">
               <div
                 className="h-4 bg-green-500 rounded-full transition-all duration-500"
@@ -759,7 +942,7 @@ const handleSwapPokemon = async (idx) => {
         </div>
 
         {/* Moveset */}
-        <div className={`grid grid-cols-2 gap-4 w-full max-w-md mt-2 mb-4 ${movesEnabled ? "" : "hidden"}`}>
+        <div className={`grid grid-cols-2 gap-4 w-full max-w-md mt-2 mb-4 ${movesEnabled && !showMegaPrompt ? "" : "hidden"}`}>
           {currentPokemon?.moves?.map((move, idx) => (
             <button
               key={idx}
@@ -785,7 +968,7 @@ const handleSwapPokemon = async (idx) => {
           </div>
         }
 
-        {showMegaPrompt && (
+        {showMegaPrompt && (!playerAttacking && !npcAttacking) && (
           <div className="bg-white text-black p-6 rounded-2xl text-center shadow-lg">
             <p className="mb-4 text-lg font-bold">Do you want to Mega Evolve?</p>
             <div className="flex justify-center gap-6">
@@ -799,10 +982,6 @@ const handleSwapPokemon = async (idx) => {
                 className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 onClick={() => {
                   setShowMegaPrompt(false);
-                  setCurrentPokemon((prev) => ({
-                    ...prev,
-                    canMega: false,
-                  }));
                 }}
               >
                 No
