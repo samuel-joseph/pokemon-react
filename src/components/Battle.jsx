@@ -11,12 +11,6 @@ import Mega from "./Mega";
 
 
 
-
-// fix -> handleSwapPokemon
-// missing fn -> charge, recharge and status moves
-
-
-
 const Battle = ({ onNext }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
