@@ -1,22 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
-const MainContent = ({ rank1, isLoggedIn }) => {
+const MainContent = ({ rank1, isLoggedIn, pokemonIds }) => {
   const [pokemons, setPokemons] = useState([]);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    const generated = Array.from({ length: 15 }, () =>
-      Math.floor(Math.random() * 400) + 1
-    );
+    if (!pokemonIds || pokemonIds.length === 0) return;
 
-    // Create initial positions and speeds for each Pokémon
-    const sprites = generated.map((id) => ({
+    // Prepare animated Pokémon using only those passed from App
+    const sprites = pokemonIds.slice(0, 15).map((id) => ({
       id,
-      x: Math.random() * 80 + 10, // start somewhere inside screen
+      x: Math.random() * 80 + 10,
       y: Math.random() * 80 + 10,
-      vx: (Math.random() - 0.5) * 0.2, // velocity X
-      vy: (Math.random() - 0.5) * 0.2, // velocity Y
+      vx: (Math.random() - 0.5) * 0.15, // smaller = slower movement
+      vy: (Math.random() - 0.5) * 0.15,
     }));
 
     setPokemons(sprites);
@@ -24,36 +22,23 @@ const MainContent = ({ rank1, isLoggedIn }) => {
     const animate = () => {
       setPokemons((prev) =>
         prev.map((p) => {
-          let newX = p.x + p.vx * 1; // multiply to control speed
-          let newY = p.y + p.vy * 1;
+          let newX = p.x + p.vx * 0.5;
+          let newY = p.y + p.vy * 0.5;
 
-          // Bounce off screen edges (10px padding)
-          if (newX < 0) {
-            newX = 0;
-            p.vx = -p.vx;
-          }
-          if (newX > 90) {
-            newX = 90;
-            p.vx = -p.vx;
-          }
-          if (newY < 0) {
-            newY = 0;
-            p.vy = -p.vy;
-          }
-          if (newY > 90) {
-            newY = 90;
-            p.vy = -p.vy;
-          }
+          // Bounce when hitting edges
+          if (newX < 0) { newX = 0; p.vx = -p.vx; }
+          if (newX > 95) { newX = 95; p.vx = -p.vx; }
+          if (newY < 0) { newY = 0; p.vy = -p.vy; }
+          if (newY > 95) { newY = 95; p.vy = -p.vy; }
 
           return { ...p, x: newX, y: newY, vx: p.vx, vy: p.vy };
         })
       );
-
       requestAnimationFrame(animate);
     };
 
     animate();
-  }, []);
+  }, [pokemonIds]);
 
   return (
     <div
@@ -61,27 +46,27 @@ const MainContent = ({ rank1, isLoggedIn }) => {
       className="relative w-full min-h-screen flex flex-col items-center justify-start pt-16 text-center overflow-hidden bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-300"
     >
       {/* Animated Pokémon Sprites */}
-      {pokemons.map((p, index) => (
+      {pokemons.map((p) => (
         <img
-          key={index}
+          key={p.id}
           src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${p.id}.gif`}
           alt={`pokemon-${p.id}`}
-          className="absolute w-16 h-16 pointer-events-none"
+          className="absolute w-16 h-16 pointer-events-none opacity-80"
           style={{ top: `${p.y}%`, left: `${p.x}%` }}
         />
       ))}
 
       {rank1 && (
-        <div className="bg-yellow-400 text-black font-bold py-2 px-6 rounded-full shadow-lg animate-pulse mb-8 text-center">
+        <div className="bg-yellow-400 text-black font-bold py-2 px-6 rounded-full shadow-lg animate-pulse mb-8">
           🔥 Rank #1: {rank1} 🔥
         </div>
       )}
 
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 to-pink-500 animate-gradient-text drop-shadow-lg mb-4 text-center">
+      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 to-pink-500 animate-gradient-text drop-shadow-lg mb-4">
         Pokémon App
       </h1>
 
-      <div className="flex flex-col sm:flex-row gap-4 mt-6 z-10 relative">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6 z-10">
         {isLoggedIn && (
           <Link
             to="/profile"

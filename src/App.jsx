@@ -24,7 +24,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { name } = useTeam()
   const [rank1, setRank1] = useState("");
-
+  const [pokemons, setPokemons] = useState([]);
   const [serverReady, setServerReady] = useState(false);
 
   
@@ -45,10 +45,26 @@ const App = () => {
     else logout();
   };
 
-  const getRankOne = async () => {
+    const getRankOne = async () => {
     try {
       const data = await getAllRecord();
-      if (data?.length > 0) setRank1(data[0].name);
+
+      if (data?.length > 0) {
+        setRank1(data[0].name);
+        console.log("Rank 1 record:", data[0].record);
+
+        // Extract all Pokémon IDs across all users and all their records
+        const allPokemonIds = data.flatMap((user) =>
+          user.record.flatMap((r) =>
+            r.pokemon.map((p) => p.id)
+          )
+        );
+        // Remove duplicates (optional)
+        const uniquePokemonIds = [...new Set(allPokemonIds)];
+
+        setPokemons(uniquePokemonIds)
+        console.log("PokemonId ",uniquePokemonIds)
+      }
     } catch (err) {
       console.error(err);
     }
@@ -127,11 +143,11 @@ const App = () => {
       </nav>
 
       {/* Page Content */}
-      <main className="w-full max-w-4xl mx-auto px-4 background-black">
+      <main>
         <Routes>
           <Route 
             path="/"
-            element={ <MainContent rank1={rank1} isLoggedIn={isLoggedIn}  /> }
+            element={ <MainContent rank1={rank1} isLoggedIn={isLoggedIn} pokemonIds={pokemons}  /> }
           />
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/region" element={<Region />} />
