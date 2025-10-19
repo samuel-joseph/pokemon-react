@@ -44,12 +44,12 @@ const Battle = ({ onNext }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  const HIDE_MOVE_TIMER = 2500; //original 2500
-  const INBETWEEN_HIT_TIME = 2000;  //original 2000
-  const POKEMON_ATTACK_TIME = 2500; //original 2500
-  const BG_COLOR_TIME = 2500; //original 2500
+  const HIDE_MOVE_TIMER = 2000; //original 2500
+  const INBETWEEN_HIT_TIME = 1500;  //original 2000
+  const POKEMON_ATTACK_TIME = 2000; //original 2500
+  const BG_COLOR_TIME = 2000; //original 2500
   const FAINTED_DELAY = 1000;
-  const MESSAGE_DELAY = 1000;
+  const MESSAGE_DELAY = 1500;
 
 
 
@@ -498,23 +498,23 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
       setNpcHit(true);
       await wait(INBETWEEN_HIT_TIME);
-      setNpcHit(false);
+      setNpcHit(newHP<=0);
 
       setNpcDamage(damage);
       await wait(1000);
       setNpcDamage(null);
-
+      setNpcTeam((prev) => {
+        const copy = [...prev];
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        return copy;
+      });
+      await wait(1000)
       if (newHP <= 0) {
         setNpcTeam((prev) => prev.slice(1));
-        return true;
-      } else {
-        setNpcTeam((prev) => {
-          const copy = [...prev];
-          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
-          return copy;
-        });
-        return false;
+        setNpcHit(false)
+        return true
       }
+      else return false
     } else {
       setNpcAttacking(true);
       await wait(POKEMON_ATTACK_TIME);
@@ -522,24 +522,24 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
       setIsTeamHit(true);
       await wait(INBETWEEN_HIT_TIME);
-      setIsTeamHit(false);
+      setIsTeamHit(newHP<=0);
 
       setPlayerDamage(damage);
       await wait(1000);
       setPlayerDamage(null);
-
+      setTeam((prev) => {
+        const copy = [...prev];
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        return copy;
+      });
+      await wait(1000)
       if (newHP <= 0) {
         setInventory((prev) => [...prev, defenderSide]);
         setTeam((prev) => prev.slice(1));
-        return true;
-      } else {
-        setTeam((prev) => {
-          const copy = [...prev];
-          if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
-          return copy;
-        });
-        return false;
+        setIsTeamHit(false)
+        return true
       }
+      else return false
     }
   };
 
@@ -753,14 +753,6 @@ const handleSwapPokemon = async (idx) => {
 
   // Wait for message to appear before NPC attack
   await wait(MESSAGE_DELAY);
-
-  // NPC attacks after swap
-  // if (npcTeam.length > 0 && currentNpc) {
-  //   const npcMove = chooseNpcMove(currentNpc, prevPokemon);
-  //   if (npcMove) {
-  //     await performAttack(currentNpc, currentPokemon, npcMove, false);
-  //   }
-  // }
 
   // Restore state after everything resolves
   await wait(HIDE_MOVE_TIMER);
