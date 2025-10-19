@@ -75,7 +75,10 @@ export const addNarate = async ({
 
 export const getMega = async (name) => {
   const res = await fetch(`${API_URL}/api/mega/${name}`);
-  if (!res.ok) throw new Error(`Failed to fetch mega`);
+  if (!res.ok) throw new Error("Failed to fetch mega");
+
   const data = await res.json();
-  return data;
+
+  // If the response is an array (and not empty), return only the first element
+  return Array.isArray(data) && data.length > 0 ? data[0] : data;
 };

@@ -90,7 +90,7 @@ const CHARGING_MOVE_IDS = [
         const copy = [...prevTeam];
         copy[0] = {
           ...copy[0], // keep existing properties like level, moves, status, etc.
-          name: megaForm.name,
+          name: megaForm.mega_name,
           currentHP: megaForm.currentHP,
           maxHP: megaForm.maxHP,
           sprite_back: megaForm.sprite_back,
@@ -799,7 +799,7 @@ const handleSwapPokemon = async (idx) => {
       const copy = [...prevTeam];
       copy[0] = {
         ...copy[0],
-        name: newData.name,
+        name: newData.mega_name,
         currentHP: Math.max(newData.currentHP - reduceHp, 0),
         maxHP: newData.maxHP,
         sprite_back: newData.sprite_back,
