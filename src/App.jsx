@@ -15,6 +15,7 @@ import { useTeam } from "./components/TeamContext";
 import { getAllRecord } from "./services/recordService";
 import pokeballImg from "./assets/pokeball.png"
 import LoadingScreen from "./components/LoadingScreen"
+import MainContent from "./components/MainContent";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -126,47 +127,11 @@ const App = () => {
       </nav>
 
       {/* Page Content */}
-      <main className="w-full max-w-4xl mx-auto px-4">
+      <main className="w-full max-w-4xl mx-auto px-4 background-black">
         <Routes>
           <Route 
-            path="/" 
-            element={
-              <div className="flex flex-col items-center justify-center text-center min-h-[60vh] bg-no-repeat bg-center md:bg-cover bg-contain bg-[position:center_top_20%] sm:bg-center">
-
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-red-500 mb-4 text-center">Pokémon App
-                </h1>
-                {rank1 && (
-                  <div className="bg-yellow-400 text-black font-bold py-2 px-4 shadow-md animate-pulse text-center">
-                    🔥 Rank #1: {rank1} 🔥
-                  </div>
-                )}
-
-                {isLoggedIn && <Link
-                  to="/profile"
-                  className="mt-6 inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
-                >
-                  Go to Profile
-                </Link>}
-                <Link 
-                  to="/region" 
-                  className="mt-6 inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
-                >
-                  Go to Stadium
-                </Link>
-                <Link 
-                  to="/leaderboard" 
-                  className="mt-6 inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
-                >
-                  Leader Board
-                </Link>
-                <Link 
-                  to="/pokedex" 
-                  className="mt-6 inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
-                >
-                  Go to Pokédex
-                </Link>
-              </div>
-            } 
+            path="/"
+            element={ <MainContent rank1={rank1} isLoggedIn={isLoggedIn}  /> }
           />
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/region" element={<Region />} />

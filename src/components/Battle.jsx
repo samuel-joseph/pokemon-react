@@ -44,20 +44,20 @@ const Battle = ({ onNext }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  // const HIDE_MOVE_TIMER = 2000; 
-  // const INBETWEEN_HIT_TIME = 1500;
-  // const POKEMON_ATTACK_TIME = 2000;
-  // const BG_COLOR_TIME = 2000;
-  // const FAINTED_DELAY = 1000;
-  // const MESSAGE_DELAY = 1500;
+  const HIDE_MOVE_TIMER = 2000; 
+  const INBETWEEN_HIT_TIME = 1500;
+  const POKEMON_ATTACK_TIME = 2000;
+  const BG_COLOR_TIME = 2000;
+  const FAINTED_DELAY = 1000;
+  const MESSAGE_DELAY = 1500;
 
   //for test
-  const HIDE_MOVE_TIMER = 50; 
-  const INBETWEEN_HIT_TIME = 50;  
-  const POKEMON_ATTACK_TIME = 50; 
-  const BG_COLOR_TIME = 50; 
-  const FAINTED_DELAY = 50;
-  const MESSAGE_DELAY = 50;
+  // const HIDE_MOVE_TIMER = 50; 
+  // const INBETWEEN_HIT_TIME = 50;  
+  // const POKEMON_ATTACK_TIME = 50; 
+  // const BG_COLOR_TIME = 50; 
+  // const FAINTED_DELAY = 50;
+  // const MESSAGE_DELAY = 50;
 
 
 
@@ -901,7 +901,7 @@ const handleSwapPokemon = async (idx) => {
           <motion.img
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
-              className={`object-contain ${
+              className={`${
               currentPokemon?.name.toLowerCase().includes("mega") ||
               currentPokemon?.name.toLowerCase().includes("ash")
                 ? "w-56 h-56 sm:w-48 sm:h-48"
