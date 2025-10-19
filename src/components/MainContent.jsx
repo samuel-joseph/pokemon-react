@@ -56,10 +56,10 @@ const MainContent = ({ rank1, isLoggedIn }) => {
   }, []);
 
   return (
-<div
-  ref={containerRef}
-  className="relative w-full min-h-screen flex flex-col items-center justify-start pt-16 text-center overflow-hidden bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-300"
->
+    <div
+      ref={containerRef}
+      className="relative w-full min-h-screen flex flex-col items-center justify-start pt-16 text-center overflow-hidden bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-300"
+    >
       {/* Animated Pokémon Sprites */}
       {pokemons.map((p, index) => (
         <img
