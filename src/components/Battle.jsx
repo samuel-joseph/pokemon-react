@@ -941,7 +941,7 @@ const handleSwapPokemon = async (idx) => {
             style={{ opacity: isTeamHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
             animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
             transition={{
-              opacity: { delay: .5, duration: .5 }, // 👈 delay the appearance by 1s
+              opacity: { delay: 1, duration: 1 }, // 👈 delay the appearance by 1s
               x: { duration: 0.5 },
               y: { duration: 0.5 },
             }}
