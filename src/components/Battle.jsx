@@ -70,6 +70,11 @@ const CHARGING_MOVE_IDS = [
 ];
   
   
+  const playerCry = new Audio(currentPokemon?.cries?.latest);
+  const npcCry = new Audio(currentNpc?.cries?.latest);
+
+  playerCry.volume = 0.3;
+  npcCry.volume = 0.3;
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -93,18 +98,21 @@ const CHARGING_MOVE_IDS = [
     console.log("🔓 Audio unlocked for mobile.");
   };
 
-  const playRoar = (pokemonCry) => {
-    if (!pokemonCry) return;
-    const roar = new Audio(pokemonCry);
-    roar.volume = 0.3;
-    roar.play().catch((err) => console.warn("Audio play blocked:", err));
+  const playRoar = (isPlayer) => {
+    // if (!pokemonCry) return;
+    // const roar = new Audio(pokemonCry);
+    // roar.volume = 0.3;
+    // roar.play().catch((err) => console.warn("Audio play blocked:", err));
+    if (!audioUnlocked) return;
+    (isPlayer ? playerCry : npcCry).play().catch((err) => console.warn(err));
   };
 
   useEffect(() => {
     const handleBattleStart = () => {
       unlockAudio();
-      playRoar(team[0]?.cries?.latest);
-      setTimeout(() => playRoar(npcTeam[0]?.cries?.latest), 4000);
+      // playRoar(team[0]?.cries?.latest);
+      playRoar(true)
+      setTimeout(() => playRoar(false), 4000);
     };
 
     handleBattleStart()
@@ -154,7 +162,8 @@ const CHARGING_MOVE_IDS = [
       });
       handleMegaEvolution(false)
       await wait(2000);
-      playRoar(currentNpc.cries?.latest);
+      // playRoar(currentNpc.cries?.latest);
+      playRoar(false);
     } catch (err) {
       console.error("Failed to apply NPC Mega:", err);
     }
@@ -567,7 +576,8 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           setNpcHit(false)
           setAllowSwap(true);
           await wait(500);
-          playRoar(currentNpc.cries?.latest);
+          // playRoar(currentNpc.cries?.latest);
+          playRoar(false)
         return true
       }
       else return false
@@ -595,7 +605,8 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           setIsTeamHit(false)
           setAllowSwap(true);
           await wait(500);
-          playRoar(currentPokemon.cries?.latest); 
+        // playRoar(currentPokemon.cries?.latest); 
+        playRoar(true)
         return true
       }
       else return false
@@ -864,7 +875,8 @@ const handleSwapPokemon = async (idx) => {
 
     handleMegaEvolution(true);
     await wait(4000);
-    playRoar(currentPokemon.cries?.latest)
+    // playRoar(currentPokemon.cries?.latest)
+    playRoar(true)
   } catch (err) {
     console.error("Error during Mega Evolution:", err);
   }
