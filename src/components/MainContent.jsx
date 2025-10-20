@@ -67,14 +67,14 @@ const MainContent = ({ rank1, isLoggedIn, pokemonIds }) => {
       </h1>
 
       <div className="flex flex-col sm:flex-row gap-4 mt-6 z-10">
-        {isLoggedIn && (
+        {/* {isLoggedIn && (
           <Link
             to="/profile"
             className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
           >
             Go to Profile
           </Link>
-        )}
+        )} */}
         <Link
           to="/region"
           className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
