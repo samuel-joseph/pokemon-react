@@ -523,14 +523,14 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       setNpcHit(newHP<=0);
 
       setNpcDamage(damage);
-      await wait(700);
+      await wait(500);
       setNpcDamage(null);
       setNpcTeam((prev) => {
         const copy = [...prev];
         if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
         return copy;
       });
-      await wait(700)
+      await wait(500)
       if (newHP <= 0) {
         setNpcTeam((prev) => prev.slice(1));
         setNpcHit(false)
