@@ -41,9 +41,10 @@ const App = () => {
 
   const checkToken = () => {
     const token = getToken();
-    if (token) setIsLoggedIn(true)
-    else logout();
+    if (token) setIsLoggedIn(true);
+    else setIsLoggedIn(false); // <- important
   };
+
 
     const getRankOne = async () => {
     try {
@@ -78,7 +79,10 @@ const App = () => {
   window.addEventListener("storage", checkToken);
 
   // Re-run periodically to catch manual localStorage changes
-  const interval = setInterval(checkToken, checkServer, 1000); // 1s is enough
+  const interval = setInterval(() => {
+    checkToken();
+    checkServer();
+  }, 1000);
 
   return () => {
     window.removeEventListener("storage", checkToken);
@@ -95,17 +99,25 @@ const App = () => {
   return (
     <Router>
       <nav className="bg-red-600 text-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 flex justify-between h-16">
+        <div className="max-w-6xl mx-auto px-4 flex justify-between h-16 items-center">
           <h1 className="text-xl font-bold">{isLoggedIn ? name : 'Pokémon App' }</h1>
           {/* Desktop Links */}
           <div className="hidden md:flex space-x-4">
             <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">Home | </Link>
             {isLoggedIn && <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">{name} </Link>}
-            {!isLoggedIn ? 
-              <Link to="/login" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log in</Link>
-              :
-              <Link to="/logout" className="block hover:text-yellow-300 font-semibold transition-colors" onClick={() => setIsOpen(false)}>Log out</Link>
-            }
+            {!isLoggedIn ? (
+              <Link to="/login" className="hover:text-yellow-300 font-semibold transition-colors">Log in</Link>
+            ) : (
+              <button
+                className="hover:text-yellow-300 font-semibold transition-colors"
+                onClick={() => {
+                  logout(); // clear token
+                  setIsLoggedIn(false); // update state
+                }}
+              >
+                Log out
+              </button>
+            )}
           </div>
 
           {/* Mobile Hamburger */}

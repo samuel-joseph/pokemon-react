@@ -29,7 +29,7 @@ const Battle = ({ onNext }) => {
   const [showMegaAnimation, setShowMegaAnimation] = useState(false);
   const [showMegaPrompt, setShowMegaPrompt] = useState(false);
 
-
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [battleMessage, setBattleMessage] = useState("");
   
   const [allowNpcMega, setAllowNpcMega] = useState(true);
@@ -45,7 +45,7 @@ const Battle = ({ onNext }) => {
   const reserveNpc = npcTeam.slice(1);
 
   const HIDE_MOVE_TIMER = 2000; 
-  const INBETWEEN_HIT_TIME = 1500;
+  const INBETWEEN_HIT_TIME = 1000;
   const POKEMON_ATTACK_TIME = 2000;
   const BG_COLOR_TIME = 2000;
   const FAINTED_DELAY = 1000;
@@ -73,17 +73,48 @@ const CHARGING_MOVE_IDS = [
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const pokemonRoar = (isPlayer) => {
-    const pokemon_cry = isPlayer ? currentPokemon.cries.latest : currentNpc.cries.latest
-    const roar = new Audio(pokemon_cry);
-    roar.volume = .3;
-    return roar.play();
-  }
+  // const playRoar = (isPlayer) => {
+  //   const pokemon_cry = isPlayer ? currentPokemon.cries.latest : currentNpc.cries.latest
+  //   const roar = new Audio(pokemon_cry);
+  //   roar.volume = .3;
+  //   return roar.play();
+  // }
+
+  // useEffect(() => {
+  //   playRoar(true);
+  //   setTimeout(()=> playRoar(false),5000)
+  // },[])
+
+  const unlockAudio = () => {
+    if (audioUnlocked) return;
+    const audio = new Audio();
+    audio.play().catch(() => {}); // attempt silent play
+    setAudioUnlocked(true);
+    console.log("🔓 Audio unlocked for mobile.");
+  };
+
+  const playRoar = (pokemonCry) => {
+    if (!pokemonCry) return;
+    const roar = new Audio(pokemonCry);
+    roar.volume = 0.3;
+    roar.play().catch((err) => console.warn("Audio play blocked:", err));
+  };
 
   useEffect(() => {
-    pokemonRoar(true);
-    setTimeout(()=> pokemonRoar(false),5000)
+    const handleBattleStart = () => {
+      unlockAudio();
+      playRoar(team[0]?.cries?.latest);
+      setTimeout(() => playRoar(npcTeam[0]?.cries?.latest), 4000);
+    };
+
+    handleBattleStart()
   },[])
+
+  // call on first user action (e.g. clicking "Fight" or "Start")
+  useEffect(() => {
+    document.body.addEventListener("click", unlockAudio, { once: true });
+    return () => document.body.removeEventListener("click", unlockAudio);
+  }, []);
 
   useEffect(() => {
   if (allowUserMage && currentPokemon?.canMega) {
@@ -123,7 +154,7 @@ const CHARGING_MOVE_IDS = [
       });
       handleMegaEvolution(false)
       await wait(2000);
-      pokemonRoar(false);
+      playRoar(currentNpc.cries?.latest);
     } catch (err) {
       console.error("Failed to apply NPC Mega:", err);
     }
@@ -532,11 +563,11 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       });
       await wait(500)
       if (newHP <= 0) {
-        setNpcTeam((prev) => prev.slice(1));
-        setNpcHit(false)
-        setAllowSwap(true);
-        await wait(500);
-        pokemonRoar(false);
+          setNpcTeam((prev) => prev.slice(1));
+          setNpcHit(false)
+          setAllowSwap(true);
+          await wait(500);
+          playRoar(currentNpc.cries?.latest);
         return true
       }
       else return false
@@ -559,12 +590,12 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       });
       await wait(1000)
       if (newHP <= 0) {
-        setInventory((prev) => [...prev, defenderSide]);
-        setTeam((prev) => prev.slice(1));
-        setIsTeamHit(false)
-        setAllowSwap(true);
-        await wait(500);
-        pokemonRoar(true);
+          setInventory((prev) => [...prev, defenderSide]);
+          setTeam((prev) => prev.slice(1));
+          setIsTeamHit(false)
+          setAllowSwap(true);
+          await wait(500);
+          playRoar(currentPokemon.cries?.latest); 
         return true
       }
       else return false
@@ -832,8 +863,8 @@ const handleSwapPokemon = async (idx) => {
     });
 
     handleMegaEvolution(true);
-    await wait(2000);
-    pokemonRoar(true)
+    await wait(4000);
+    playRoar(currentPokemon.cries?.latest)
   } catch (err) {
     console.error("Error during Mega Evolution:", err);
   }
@@ -919,7 +950,7 @@ const handleSwapPokemon = async (idx) => {
           y: npcAttacking ? 50 : 0,
         }}
         transition={{
-          opacity: { delay: 5, duration: .5 }, // 👈 delay the appearance by 1s
+          opacity: { delay: 4, duration: .5 }, // 👈 delay the appearance by 1s
           x: { duration: 0.5 },
           y: { duration: 0.5 },
         }}
@@ -932,7 +963,7 @@ const handleSwapPokemon = async (idx) => {
           <motion.img
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
-              className={`${
+              className={`object-contain ${
               currentPokemon?.name.toLowerCase().includes("mega") ||
               currentPokemon?.name.toLowerCase().includes("ash")
                 ? "w-56 h-56 sm:w-48 sm:h-48"
@@ -941,7 +972,7 @@ const handleSwapPokemon = async (idx) => {
             style={{ opacity: isTeamHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
             animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
             transition={{
-              opacity: { delay: 1, duration: 1 }, // 👈 delay the appearance by 1s
+              opacity: { delay: 2, duration: 1 }, // 👈 delay the appearance by 1s
               x: { duration: 0.5 },
               y: { duration: 0.5 },
             }}
