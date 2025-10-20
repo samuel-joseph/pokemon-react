@@ -875,7 +875,7 @@ const handleSwapPokemon = async (idx) => {
 
   return (
     <div
-      className="flex flex-col h-screen relative"
+      className="flex flex-col h-screen relative items-center"
       style={{
         backgroundColor: bgColor,
         transition: "background-color 2s ease-in-out",
@@ -982,10 +982,10 @@ const handleSwapPokemon = async (idx) => {
             <p>Level {currentPokemon?.level || 50}</p>
           {currentPokemon?.status && (
             <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold uppercase ${
-            currentNpc.status === "paralyzed" ? "text-yellow-400" :
-            currentNpc.status === "burned" ? "text-red-500" :
-            currentNpc.status === "frozen" ? "text-blue-300" :
-            currentNpc.status === "poisoned" ? "text-purple-400" :
+            currentPokemon.status === "paralyzed" ? "text-yellow-400" :
+            currentPokemon.status === "burned" ? "text-red-500" :
+            currentPokemon.status === "frozen" ? "text-blue-300" :
+            currentPokemon.status === "poisoned" ? "text-purple-400" :
             "text-white"
           } drop-shadow`}>
               {currentPokemon.status}
