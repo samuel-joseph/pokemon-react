@@ -687,7 +687,10 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           || playerMove.category_name === "damage+lower")
           await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
       }
-      if (!npcFainted) {
+
+      playerFainted = applyStatusEffectsEndOfTurn(currentPokemon, true);
+      
+      if (!npcFainted && !playerFainted) {
         await wait(FAINTED_DELAY);
         if (npcMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
@@ -697,9 +700,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           || npcMove.category_name === "damage+lower")
             await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
         }
-      } else {
-        // setAllowSwap(true);
-      }
+      } 
     } else {
       if (npcMove.category_name === "net-good-stats") {
         await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
@@ -709,7 +710,8 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           || npcMove.category_name === "damage+lower")
           await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
       }
-      if (!playerFainted) {
+      npcFainted = applyStatusEffectsEndOfTurn(currentNpc, false);
+      if (!playerFainted && !npcFainted) {
         await wait(FAINTED_DELAY);
         if (playerMove.category_name === "net-good-stats") { 
           await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
@@ -719,9 +721,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           || playerMove.category_name === "damage+lower")
             await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
         }
-      } else {
-      // setAllowSwap(true);
-    }
+      } 
   }
 
   await wait(HIDE_MOVE_TIMER);
@@ -729,6 +729,50 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
   // setAllowSwap(true);
   setBattleMessage("");
   };
+
+
+  const applyStatusEffectsEndOfTurn = (pokemon, isPlayer) => {
+    if (!pokemon?.status) return false;
+    
+
+  const damage =
+    pokemon.status === "burned"
+      ? Math.floor(pokemon.maxHP / 16)
+      : pokemon.status === "poisoned"
+      ? Math.floor(pokemon.maxHP / 8)
+      : pokemon.status === "badly poisoned"
+      ? Math.floor((pokemon.maxHP / 16) * (pokemon.toxicCounter || 1))
+          : 0;
+
+  if (damage === 0) return false;
+
+  const updated = {
+    ...pokemon,
+    currentHP: Math.max(0, pokemon.currentHP - damage),
+  };
+    
+    console.log(`${updated.name} is hurt by ${pokemon.status} damage is ${damage}!`);
+
+
+  const fainted = updated.currentHP === 0;
+
+  if (isPlayer) {
+    setTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = updated;
+      return copy;
+    });
+  } else {
+    setNpcTeam((prev) => {
+      const copy = [...prev];
+      copy[0] = updated;
+      return copy;
+    });
+  }
+
+  return fainted;
+};
+
   
 
 
@@ -738,16 +782,6 @@ const processStatusEffects = (pokemon, isPlayer = true) => {
   const updated = { ...pokemon };
 
   switch (updated.status) {
-    case "burned":
-      updated.currentHP -= Math.floor(updated.maxHP / 16);
-      break;
-    case "poisoned":
-      updated.currentHP -= Math.floor(updated.maxHP / 8);
-      break;
-    case "badly poisoned":
-      updated.currentHP -= Math.floor((updated.maxHP / 16) * (updated.toxicCounter || 1));
-      updated.toxicCounter = (updated.toxicCounter || 1) + 1;
-      break;
     case "paralyzed":
       if (Math.random() < 0.25) {
         setBattleMessage(`${updated.name} is paralyzed! It can’t move!`);
