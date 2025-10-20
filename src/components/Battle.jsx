@@ -73,6 +73,18 @@ const CHARGING_MOVE_IDS = [
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const pokemonRoar = (isPlayer) => {
+    const pokemon_cry = isPlayer ? currentPokemon.cries.latest : currentNpc.cries.latest
+    const roar = new Audio(pokemon_cry);
+    roar.volume = .3;
+    return roar.play();
+  }
+
+  useEffect(() => {
+    pokemonRoar(true);
+    setTimeout(()=> pokemonRoar(false),5000)
+  },[])
+
   useEffect(() => {
   if (allowUserMage && currentPokemon?.canMega) {
     setShowMegaPrompt(true);
@@ -110,6 +122,8 @@ const CHARGING_MOVE_IDS = [
         return copy;
       });
       handleMegaEvolution(false)
+      await wait(2000);
+      pokemonRoar(false);
     } catch (err) {
       console.error("Failed to apply NPC Mega:", err);
     }
@@ -520,6 +534,9 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       if (newHP <= 0) {
         setNpcTeam((prev) => prev.slice(1));
         setNpcHit(false)
+        setAllowSwap(true);
+        await wait(500);
+        pokemonRoar(false);
         return true
       }
       else return false
@@ -545,6 +562,9 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         setInventory((prev) => [...prev, defenderSide]);
         setTeam((prev) => prev.slice(1));
         setIsTeamHit(false)
+        setAllowSwap(true);
+        await wait(500);
+        pokemonRoar(true);
         return true
       }
       else return false
@@ -581,7 +601,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
       await wait(HIDE_MOVE_TIMER);
       setMovesEnabled(true);
-      setAllowSwap(true);
+      // setAllowSwap(true);
       setBattleMessage("");
       return;
     }
@@ -593,7 +613,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
       await wait(HIDE_MOVE_TIMER);
       setMovesEnabled(true);
-      setAllowSwap(true);
+      // setAllowSwap(true);
       setBattleMessage("");
       return;
     }
@@ -635,7 +655,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
             await applyStatusBuffMove(currentNpc, currentPokemon, npcMove, false);
         }
       } else {
-        setAllowSwap(true);
+        // setAllowSwap(true);
       }
     } else {
       if (npcMove.category_name === "net-good-stats") {
@@ -657,13 +677,13 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
             await applyStatusBuffMove(currentPokemon, currentNpc, playerMove, true);
         }
       } else {
-      setAllowSwap(true);
+      // setAllowSwap(true);
     }
   }
 
   await wait(HIDE_MOVE_TIMER);
   setMovesEnabled(true);
-  setAllowSwap(true);
+  // setAllowSwap(true);
   setBattleMessage("");
   };
   
@@ -765,7 +785,7 @@ const handleSwapPokemon = async (idx) => {
   // Restore state after everything resolves
   await wait(HIDE_MOVE_TIMER);
   setMovesEnabled(true);
-  setAllowSwap(true);
+  // setAllowSwap(true);
 };
 
 
@@ -812,6 +832,8 @@ const handleSwapPokemon = async (idx) => {
     });
 
     handleMegaEvolution(true);
+    await wait(2000);
+    pokemonRoar(true)
   } catch (err) {
     console.error("Error during Mega Evolution:", err);
   }
@@ -880,19 +902,28 @@ const handleSwapPokemon = async (idx) => {
           </div>
         </div>
 
-        <motion.img
-          src={currentNpc?.sprite_front}
-          alt={currentNpc?.name}
-          className={`object-contain ${
-            currentNpc?.name.toLowerCase().includes("mega") ||
-            currentNpc?.name.toLowerCase().includes("ash")
+      <motion.img
+        src={currentNpc?.sprite_front}
+        alt={currentNpc?.name}
+        className={`object-contain ${
+          currentNpc?.name.toLowerCase().includes("mega") ||
+          currentNpc?.name.toLowerCase().includes("ash")
             ? "w-48 h-48 sm:w-56 sm:h-56"
             : "w-32 h-32 sm:w-40 sm:h-40"
-          }`}
-          style={{ opacity: npcHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
-          animate={npcAttacking ? { x: -50, y: 50 } : { x: 0 }}
-          transition={{ duration: 0.5, yoyo: 1 }}
-        />
+        }`}
+        style={{ opacity: npcHit ? 0.25 : 1 }}
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: npcHit ? 0.25 : 1,
+          x: npcAttacking ? -50 : 0,
+          y: npcAttacking ? 50 : 0,
+        }}
+        transition={{
+          opacity: { delay: 5, duration: .5 }, // 👈 delay the appearance by 1s
+          x: { duration: 0.5 },
+          y: { duration: 0.5 },
+        }}
+      />
       </div>
 
       {/* Bottom Half: Player */}
@@ -909,7 +940,11 @@ const handleSwapPokemon = async (idx) => {
             }`}
             style={{ opacity: isTeamHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
             animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{
+              opacity: { delay: .5, duration: .5 }, // 👈 delay the appearance by 1s
+              x: { duration: 0.5 },
+              y: { duration: 0.5 },
+            }}
           />
           <div className="flex flex-col">
             <h3 className="text-lg font-bold mt-2">{currentPokemon?.name}</h3>

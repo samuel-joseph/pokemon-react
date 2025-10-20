@@ -16,7 +16,15 @@ export const signup = async (username, password, pokemon) => {
   if (!res.ok) {
     throw new Error(data.error || "Signup failed");
   }
-  return data;
+
+  // ✅ Auto login after signup
+  try {
+    const loginRes = await login(username, password);
+    return loginRes; // return same format as login
+  } catch (err) {
+    console.error("Auto login failed:", err);
+    return data;
+  }
 };
 
 export const login = async (username, password) => {
@@ -26,22 +34,18 @@ export const login = async (username, password) => {
     body: JSON.stringify({ username, password }),
   });
   const data = await res.json();
+
   if (res.ok && data.token) {
     setToken(data.token);
-  }
-
-  if (!res.ok) {
+  } else {
     throw new Error(data.message || "Login failed");
   }
+
   return data;
 };
 
 export const logout = () => localStorage.removeItem("token");
 
-export const getToken = () => {
-  return localStorage.getItem("token");
-};
+export const getToken = () => localStorage.getItem("token");
 
-export const setToken = (token) => {
-  return localStorage.setItem("token", token);
-};
+export const setToken = (token) => localStorage.setItem("token", token);
