@@ -615,6 +615,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
 
   const handlePlayerAttack = async (playerMove) => {
+  if (!audioUnlocked) return; 
   if (!currentPokemon || !currentNpc || !movesEnabled) return;
   setMovesEnabled(false);
   setAllowSwap(false);
