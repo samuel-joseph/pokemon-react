@@ -42,7 +42,10 @@ const App = () => {
   const checkToken = () => {
     const token = getToken();
     if (token) setIsLoggedIn(true);
-    else setIsLoggedIn(false); // <- important
+    else {
+      setIsLoggedIn(false)
+      logout()
+    }
   };
 
 
