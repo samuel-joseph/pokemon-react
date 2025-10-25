@@ -20,6 +20,30 @@ export const fetchPokemons = async () => {
   return data.pokemons;
 };
 
+export const fetchThreeStarters = async () => {
+  const starterIds = {
+    grass: [1, 0],
+    fire: [4, 255],
+    water: [7, 258, 676],
+  };
+
+  const getRandomId = (ids) => ids[Math.floor(Math.random() * ids.length)];
+
+  const [grassStarter, fireStarter, waterStarter] = await Promise.all([
+    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.grass)}`).then((res) =>
+      res.json()
+    ),
+    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.fire)}`).then((res) =>
+      res.json()
+    ),
+    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.water)}`).then((res) =>
+      res.json()
+    ),
+  ]);
+
+  return { grassStarter, fireStarter, waterStarter };
+};
+
 // Fetch all NPCs
 export const fetchAllNpc = async () => {
   const response = await fetch(`${API_URL}/api/npc`);

@@ -75,6 +75,15 @@ const MainContent = ({ rank1, isLoggedIn, pokemonIds }) => {
           Go to Profile
         </Link>
         )}
+
+        {isLoggedIn && (
+        <Link
+          to="/explore"
+          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
+        >
+          Explore Wild
+        </Link>
+        )}
         <Link
           to="/region"
           className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors"
