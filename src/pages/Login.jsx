@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
 import { useTeam } from "../components/TeamContext";
 import { getRecord } from "../services/recordService";
+import { getBuddyPokemon } from "../services/buddyService";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -10,21 +11,27 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
   const { setName, name, trophies, setTrophies } = useTeam();
+  const [showStarter, setShowStarter] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     const res = await login(username, password);
     if (res.token) {
       setMessage("Login successful!");
-      navigate("/"); 
       const data = await getRecord(username);
-
+      const buddy = await getBuddyPokemon(username);
       setName(data.name);
       setTrophies(data.record.length);
+      if (!buddy || buddy.length === 0) setShowStarter(true);
+      else navigate("/"); 
     } else {
       setMessage(res.message || "Invalid credentials");
     }
   };
+
+  if (showStarter) {
+    return <ChooseStarter />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
