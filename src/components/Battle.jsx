@@ -44,20 +44,20 @@ const Battle = ({ onNext, mode = "stadium" }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  // const HIDE_MOVE_TIMER = 2000; 
-  // const INBETWEEN_HIT_TIME = 1000;
-  // const POKEMON_ATTACK_TIME = 2000;
-  // const BG_COLOR_TIME = 2000;
-  // const FAINTED_DELAY = 1000;
-  // const MESSAGE_DELAY = 1500;
+  const HIDE_MOVE_TIMER = 2000; 
+  const INBETWEEN_HIT_TIME = 1000;
+  const POKEMON_ATTACK_TIME = 2000;
+  const BG_COLOR_TIME = 2000;
+  const FAINTED_DELAY = 1000;
+  const MESSAGE_DELAY = 1500;
 
   //for test
-  const HIDE_MOVE_TIMER = 50; 
-  const INBETWEEN_HIT_TIME = 50;  
-  const POKEMON_ATTACK_TIME = 50; 
-  const BG_COLOR_TIME = 50; 
-  const FAINTED_DELAY = 50;
-  const MESSAGE_DELAY = 50;
+  // const HIDE_MOVE_TIMER = 50; 
+  // const INBETWEEN_HIT_TIME = 50;  
+  // const POKEMON_ATTACK_TIME = 50; 
+  // const BG_COLOR_TIME = 50; 
+  // const FAINTED_DELAY = 50;
+  // const MESSAGE_DELAY = 50;
 
 
 
