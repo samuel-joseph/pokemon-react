@@ -48,7 +48,7 @@ export const updateRecord = async (name, { record }) => {
   }
 };
 
-export const incrementRegionWin = async ({ name, region, pokemon }) => {
+export const incrementRegionWin = async ({ name, region }) => {
   const token = authService.getToken();
   try {
     const res = await fetch(`${API_URL}/api/record/${name}/update/${region}`, {
@@ -57,7 +57,6 @@ export const incrementRegionWin = async ({ name, region, pokemon }) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ pokemon }),
     });
 
     if (!res.ok) {

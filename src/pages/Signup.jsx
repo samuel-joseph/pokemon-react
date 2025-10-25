@@ -24,16 +24,8 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const combined = [...inventory, ...team];
-
-      // Remove duplicates by name
-      const pokemon = combined.filter(
-        (item, index, self) =>
-          index === self.findIndex((t) => t.name === item.name)
-      );
-
       // Signup API call
-      const res = await signup(username, password, []);
+      const res = await signup(username, password);
       setMessage(res.message || "Signup successful!");
       setToken(res.token);
 

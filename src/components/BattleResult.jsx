@@ -41,7 +41,7 @@ const BattleResult = ({ outcome }) => {
         const pokemon = team;
 
         if (regionExists) {
-          await incrementRegionWin(name, region, pokemon);
+          await incrementRegionWin(name, region);
         } else {
           await updateRecord(name, { region, pokemon, win: 1 });
         }

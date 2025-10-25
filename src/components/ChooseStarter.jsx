@@ -4,6 +4,7 @@ import { addBuddyPokemon, getBuddyPokemon } from "../services/buddyService";
 import { useTeam } from "./TeamContext";
 import { getToken } from "../services/authService";
 import { typeColors } from "../helper/typeColor";
+import { useNavigate } from "react-router-dom"
 
 import EvolutionScreen from "./EvolutionScreen";
 
@@ -17,6 +18,7 @@ const ChooseStarter = () => {
   const [showEvolution, setShowEvolution] = useState(false);
 
   const { name } = useTeam();
+  const navigate = useNavigate();
 
   const username = name;
   const token = getToken();
@@ -129,6 +131,7 @@ const ChooseStarter = () => {
       onDone={() => {
         setShowEvolution(false);
         alert(`${selected.name} has joined your team!`);
+        navigate("/profile")
       }}
     />
   );

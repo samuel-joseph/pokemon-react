@@ -51,6 +51,14 @@ const App = () => {
       logout()
     }
   };
+    
+  const generateRandomPokemonIds = () => {
+    const ids = new Set();
+    while (ids.size < 20) {
+      ids.add(Math.floor(Math.random() * 649) + 1);
+    }
+    return Array.from(ids);
+  };
 
 
     const getRankOne = async () => {
@@ -59,16 +67,15 @@ const App = () => {
 
       if (data?.length > 0) {
         setRank1(data[0].name);
-        console.log("Rank 1 record:", data[0].record);
 
         // Extract all Pokémon IDs across all users and all their records
-        const allPokemonIds = data.flatMap((user) =>
-          user.record.flatMap((r) =>
-            r.pokemon.map((p) => p.id)
-          )
-        );
+        // const allPokemonIds = data.flatMap((user) =>
+        //   user.record.flatMap((r) =>
+        //     r.pokemon.map((p) => p.id)
+        //   )
+        // );
         // Remove duplicates (optional)
-        const uniquePokemonIds = [...new Set(allPokemonIds)];
+        const uniquePokemonIds = generateRandomPokemonIds();
 
         setPokemons(uniquePokemonIds)
         console.log("PokemonId ",uniquePokemonIds)

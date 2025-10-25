@@ -1090,7 +1090,7 @@ const handleSwapPokemon = async (idx) => {
           </div>
         }
 
-        {showMegaPrompt && (!playerAttacking && !npcAttacking) && (
+        {showMegaPrompt && movesEnabled && (
           <div className="bg-white text-black p-6 rounded-2xl text-center shadow-lg">
             <p className="mb-4 text-lg font-bold">Do you want to Mega Evolve?</p>
             <div className="flex justify-center gap-6">
