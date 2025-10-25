@@ -1,21 +1,22 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { signup } from "../services/authService";
+import { useNavigate } from "react-router-dom"
+import { signup, setToken } from "../services/authService";
 import { useTeam } from "../components/TeamContext";
-import { setToken } from "../services/authService";
 import { getRecord } from "../services/recordService";
+import { getBuddyPokemon } from "../services/buddyService";
+import ChooseStarter from "../components/ChooseStarter";
+
 
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showStarter, setShowStarter] = useState(false); // new state
   const { team, inventory, setTrophies, setName } = useTeam();
-
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   useEffect(() => {
-    // small delay to make the intro feel smoother
     const timer = setTimeout(() => setShowForm(true), 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -24,25 +25,42 @@ const Signup = () => {
     e.preventDefault();
     try {
       const combined = [...inventory, ...team];
-      console.log("What is pokemon pre signup: ",combined)
 
-    // Remove duplicates by 'pokemon'
-    const pokemon = combined.filter(
+      // Remove duplicates by name
+      const pokemon = combined.filter(
         (item, index, self) =>
           index === self.findIndex((t) => t.name === item.name)
       );
-      const res = await signup(username, password, pokemon);
+
+      // Signup API call
+      const res = await signup(username, password, []);
       setMessage(res.message || "Signup successful!");
       setToken(res.token);
-      const data = await getRecord(username);
 
+      // Fetch record
+      const data = await getRecord(username);
       setName(data.name);
       setTrophies(data.record.length);
-      setTimeout(() => navigate("/"),2000)
+
+      // Check if user already has a buddy Pokémon
+      const buddyData = await getBuddyPokemon(username);
+
+      if (!buddyData || buddyData.length === 0) {
+        // Render ChooseStarter component instead of navigating
+        setShowStarter(true);
+      } else {
+        // Buddy exists, you can render home/dashboard or redirect
+        setMessage("Buddy found! Redirecting to home...");
+        // Optionally, you can add navigate("/") here if you want to redirect
+      }
     } catch (error) {
       setMessage(error.message);
     }
   };
+
+  if (showStarter) {
+    return <ChooseStarter />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-100 to-indigo-200 text-gray-800 px-4">
@@ -51,11 +69,10 @@ const Signup = () => {
           Welcome, Trainer!
         </h1>
         <p className="text-sm text-gray-600 mb-4">
-          Thank you for joining the battle, Trainer! ⚡
-          Your journey through the Pokémon world has just begun.
-          Sign up now to save your progress, unlock every region,
-          train the strongest team, face legendary champions,
-          and climb your way to the top of the global leaderboard! 🥇
+          Thank you for joining the battle, Trainer! ⚡ Your journey through
+          the Pokémon world has just begun. Sign up now to save your progress,
+          unlock every region, train the strongest team, face legendary
+          champions, and climb your way to the top of the global leaderboard! 🥇
         </p>
 
         {showForm ? (

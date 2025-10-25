@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchRegionPokemons, fetchNpc } from "../services/pokemonService";
 import PokemonDetails from "./PokemonDetails";
 import { useTeam } from "../components/TeamContext";
+import { getBuddyPokemon } from "../services/buddyService";
 
 function ShowRegionPokemon() {
   const { regionName } = useParams();
@@ -23,15 +24,24 @@ function ShowRegionPokemon() {
     async function fetchData() {
       setLoading(true);
       try {
+        let buddyPokemons = [];
+        if (name && name !== "") {
+          buddyPokemons = await getBuddyPokemon(name);
+        }
+
         const pokemons = await fetchRegionPokemons(regionName);
         const npc = await fetchNpc(regionName);
+
         setNpc(npc);
-        setPokemon(pokemons);
+        setPokemon([...buddyPokemons,...pokemons]);
+        // optionally, you can do something with buddyPokemons
+        // setBuddyPokemons(buddyPokemons) if you have a state for it
       } catch (error) {
         console.error("Error fetching Pokémons:", error);
+      } finally {
+        setLoading(false);
+        setRegion(regionName);
       }
-      setLoading(false);
-      setRegion(regionName);
     }
     fetchData();
   }, [regionName, name, showInstructions]);

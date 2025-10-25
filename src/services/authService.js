@@ -3,7 +3,6 @@ const API_URL = import.meta.env.VITE_API_URL
   : "http://localhost:3000";
 
 export const signup = async (username, password, pokemon) => {
-  console.log("what is pokemon in signup: ", pokemon);
   const res = await fetch(`${API_URL}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-type": "application/json" },
@@ -42,8 +41,10 @@ export const login = async (username, password) => {
   return data;
 };
 
-export const logout = () => localStorage.removeItem("token");
+export const logout = () => localStorage.clear();
 
 export const getToken = () => localStorage.getItem("token");
 
-export const setToken = (token) => localStorage.setItem("token", token);
+export const setToken = (token) => {
+  localStorage.setItem("token", token);
+};

@@ -9,7 +9,7 @@ import { fetchPokemons } from "../services/pokemonService";
 export default function RoamArea() {
   const [position, setPosition] = useState({ x: 2, y: 2 });
   const [direction, setDirection] = useState("down"); // trainer facing
-  const [gridSize] = useState(6); // smaller grid for mobile
+  const [gridSize] = useState(7); // smaller grid for mobile
   const [pokemons, setPokemons] = useState([]);
 
   function shuffleArray(array) {

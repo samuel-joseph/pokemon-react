@@ -17,13 +17,14 @@ import pokeballImg from "./assets/pokeball.png"
 import LoadingScreen from "./components/LoadingScreen"
 import MainContent from "./components/MainContent";
 import RoamArea from "./pages/RoamArea";
+import ChooseStarter from "./components/ChooseStarter";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const App = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const { name } = useTeam()
+  const { name, setName } = useTeam()
   const [rank1, setRank1] = useState("");
   const [pokemons, setPokemons] = useState([]);
   const [serverReady, setServerReady] = useState(false);
@@ -42,7 +43,9 @@ const App = () => {
 
   const checkToken = () => {
     const token = getToken();
-    if (token) setIsLoggedIn(true);
+    if (token) {
+      setIsLoggedIn(true)
+    }
     else {
       setIsLoggedIn(false)
       logout()
@@ -107,6 +110,7 @@ const App = () => {
           <h1 className="text-xl font-bold">{isLoggedIn ? name : 'Pokémon App' }</h1>
           {/* Desktop Links */}
           <div className="hidden md:flex space-x-4">
+            {/* <Link to="/choose-starter" className="hover:text-yellow-300 font-semibold transition-colors">Choose Starter | </Link> */}
             <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">Home | </Link>
             {isLoggedIn && <Link to="/" className="hover:text-yellow-300 font-semibold transition-colors">{name} </Link>}
             {!isLoggedIn ? (
@@ -180,6 +184,7 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
 
           <Route path="/explore" element={<RoamArea />} />
+          <Route path="/choose-starter" element={<ChooseStarter />} />
         </Routes>
       </main>
     </Router>

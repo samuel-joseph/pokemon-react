@@ -21,25 +21,26 @@ export const fetchPokemons = async () => {
 };
 
 export const fetchThreeStarters = async () => {
-  const starterIds = {
-    grass: [1, 0],
-    fire: [4, 255],
-    water: [7, 258, 676],
+  const grassIds = [3, 254]; // Adjust according to your DB
+  const fireIds = [6, 257];
+  const waterIds = [9, 260, 658];
+
+  const fetchPokemon = async (id) => {
+    const res = await fetch(`${API_URL}/api/pokemon/${id}`);
+    if (!res.ok) throw new Error(`Failed to fetch Pokémon with id ${id}`);
+    const p = await res.json();
+    return p;
   };
 
-  const getRandomId = (ids) => ids[Math.floor(Math.random() * ids.length)];
-
-  const [grassStarter, fireStarter, waterStarter] = await Promise.all([
-    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.grass)}`).then((res) =>
-      res.json()
-    ),
-    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.fire)}`).then((res) =>
-      res.json()
-    ),
-    fetch(`${API_URL}/pokemon/${getRandomId(starterIds.water)}`).then((res) =>
-      res.json()
-    ),
-  ]);
+  const randomIndex = (n) => Math.floor(Math.random() * n);
+  // pick first ID from each type as starter
+  const grassStarter = await fetchPokemon(
+    grassIds[randomIndex(grassIds.length)]
+  );
+  const fireStarter = await fetchPokemon(fireIds[randomIndex(fireIds.length)]);
+  const waterStarter = await fetchPokemon(
+    waterIds[randomIndex(waterIds.length)]
+  );
 
   return { grassStarter, fireStarter, waterStarter };
 };
