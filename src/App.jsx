@@ -16,6 +16,7 @@ import { getAllRecord } from "./services/recordService";
 import pokeballImg from "./assets/pokeball.png"
 import LoadingScreen from "./components/LoadingScreen"
 import MainContent from "./components/MainContent";
+import RoamArea from "./pages/RoamArea";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -177,6 +178,8 @@ const App = () => {
           {/* Catch-all for unknown routes */}
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route path="/profile" element={<Profile />} />
+
+          <Route path="/explore" element={<RoamArea />} />
         </Routes>
       </main>
     </Router>
