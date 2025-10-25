@@ -11,7 +11,7 @@ import Mega from "./Mega";
 
 
 
-const Battle = ({ onNext }) => {
+const Battle = ({ onNext, mode = "stadium" }) => {
   const { team, setTeam, npcTeam, setNpcTeam, setInventory } = useTeam();
 
   const [npcChargeMove, setNpcChargeMove] = useState(null);
@@ -106,6 +106,7 @@ const CHARGING_MOVE_IDS = [
     if (!audioUnlocked) return;
     (isPlayer ? playerCry : npcCry).play().catch((err) => console.warn(err));
   };
+  
 
   useEffect(() => {
     const handleBattleStart = () => {
@@ -133,9 +134,14 @@ const CHARGING_MOVE_IDS = [
 
   useEffect(() => { 
     if (!currentPokemon || !currentNpc) {
-    onNext(!currentPokemon ? "lose" : "win");
-    return;
-  }
+      if (mode === "training") {
+        onNext("training-complete");
+      } else if (mode === "capture") {
+        onNext("capture-complete");
+      } else {
+        onNext(!currentPokemon ? "lose" : "win");
+      }
+    }
   const applyMegaForm = async () => {
     if (!currentNpc?.canMega) return;
 
@@ -988,11 +994,9 @@ const handleSwapPokemon = async (idx) => {
           currentNpc?.name.toLowerCase().includes("ash")
             ? "w-48 h-48 sm:w-56 sm:h-56"
             : "w-32 h-32 sm:w-40 sm:h-40"
-        }`}
-        style={{ opacity: npcHit ? 0.25 : 1 }}
-        initial={{ opacity: 0 }}
+          }`}
+        style={{ opacity: npcHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
         animate={{
-          opacity: npcHit ? 0.25 : 1,
           x: npcAttacking ? -50 : 0,
           y: npcAttacking ? 50 : 0,
         }}
