@@ -29,6 +29,10 @@ const Battle = ({ onNext, mode = "stadium" }) => {
   const [showMegaAnimation, setShowMegaAnimation] = useState(false);
   const [showMegaPrompt, setShowMegaPrompt] = useState(false);
 
+  const [playerMoveFx, setPlayerMoveFx] = useState(null);
+  const [npcMoveFx, setNpcMoveFx] = useState(null);
+
+
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [battleMessage, setBattleMessage] = useState("");
   
@@ -194,6 +198,11 @@ const CHARGING_MOVE_IDS = [
     }
     return fallback;
   };
+
+
+
+  const getMoveFx = (type) => 
+  new URL(`../assets/moveFX/${type}.png`, import.meta.url).href;
 
 
 
@@ -560,9 +569,11 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
     // --- Apply damage and animate ---
     if (attackerIsPlayer) {
+      setPlayerMoveFx(getMoveFx(move.type));
       setPlayerAttacking(true);
       await wait(POKEMON_ATTACK_TIME);
       setPlayerAttacking(false);
+      setPlayerMoveFx(null);
 
       setNpcHit(true);
       await wait(INBETWEEN_HIT_TIME);
@@ -588,9 +599,11 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       }
       else return false
     } else {
+      setNpcMoveFx(getMoveFx(move.type));
       setNpcAttacking(true);
       await wait(POKEMON_ATTACK_TIME);
       setNpcAttacking(false);
+      setNpcMoveFx(null)
 
       setIsTeamHit(true);
       await wait(INBETWEEN_HIT_TIME);
@@ -986,31 +999,73 @@ const handleSwapPokemon = async (idx) => {
           </div>
         </div>
 
-      <motion.img
-        src={currentNpc?.sprite_front}
-        alt={currentNpc?.name}
-        className={`object-contain ${
-          currentNpc?.name.toLowerCase().includes("mega") ||
-          currentNpc?.name.toLowerCase().includes("ash")
-            ? "w-48 h-48 sm:w-56 sm:h-56"
-            : "w-32 h-32 sm:w-40 sm:h-40"
-          }`}
-        style={{ opacity: npcHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
-        animate={{
-          x: npcAttacking ? -50 : 0,
-          y: npcAttacking ? 50 : 0,
-        }}
-        transition={{
-          opacity: { delay: 4, duration: .5 }, // 👈 delay the appearance by 1s
-          x: { duration: 0.5 },
-          y: { duration: 0.5 },
-        }}
-      />
+        <div className="relative flex items-center justify-center">
+          {/* Pokémon sprite */}
+          <motion.img
+            src={currentNpc?.sprite_front}
+            alt={currentNpc?.name}
+            className={`object-contain ${
+              currentNpc?.name.toLowerCase().includes("mega") ||
+              currentNpc?.name.toLowerCase().includes("ash")
+                ? "w-48 h-48 sm:w-56 sm:h-56"
+                : "w-32 h-32 sm:w-40 sm:h-40"
+            }`}
+            style={{
+              opacity: npcHit ? 0.25 : 1,
+              transition: "opacity 0.1s ease-in-out",
+            }}
+            animate={{
+              x: npcAttacking ? -50 : 0,
+              y: npcAttacking ? 50 : 0,
+            }}
+            transition={{
+              opacity: { delay: 4, duration: 0.5 },
+              x: { duration: 0.5 },
+              y: { duration: 0.5 },
+            }}
+          />
+          {playerMoveFx && (
+            <motion.img
+              key="player-moveFx"
+              src={playerMoveFx}
+              alt=" "
+              className="absolute w-32 h-32 sm:w-40 sm:h-40 object-contain pointer-events-none"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{
+                opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
+                scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
+              }}
+              transition={{
+                duration: 1.2,   // twice as long (original was 0.6)
+                delay: 0.2,
+                times: [0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1] // spread keyframes over longer duration
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Bottom Half: Player */}
       <div className="flex flex-col justify-end items-center mt-8">
         <div className="flex flex-row items-center gap-16">
+          {npcMoveFx && (
+            <motion.img
+              key="npc-moveFx"
+              src={npcMoveFx}
+              alt=" "
+              className="absolute w-32 h-32 sm:w-40 sm:h-40 object-contain pointer-events-none"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{
+                opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
+                scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
+              }}
+              transition={{
+                duration: 1.2,   // twice as long (original was 0.6)
+                delay: 0.2,
+                times: [0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1] // spread keyframes over longer duration
+              }}
+            />
+          )}
           <motion.img
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
