@@ -14,7 +14,8 @@ export default function RoamArea() {
   const [direction, setDirection] = useState("down"); // trainer facing
   const [gridSize] = useState(7); // smaller grid for mobile
   const [pokemons, setPokemons] = useState([]);
-  const { name } = useTeam();
+  const [isBuddyLimitReached, setIsBuddyLimitReached] = useState(false);
+  const { name, numberOfBuddies } = useTeam();
 
   const navigate = useNavigate();
 
@@ -61,6 +62,16 @@ export default function RoamArea() {
     isUserLoggedIn();
     getPokemons();
   }, [gridSize]);
+
+
+
+  useEffect(() => {
+  // Simulate ngOnInit check
+  if (numberOfBuddies >= 30) {
+    setIsBuddyLimitReached(true);
+  }
+}, [numberOfBuddies]);
+
 
   // Movement function
   const handleMovement = (dx, dy) => {
@@ -125,6 +136,28 @@ export default function RoamArea() {
 
   // Dynamic cell size for mobile screens
   const cellSize = `min(12vw, 60px)`;
+
+
+  if (isBuddyLimitReached) {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-green-100 text-center p-6">
+      <h1 className="text-2xl font-bold text-red-600 mb-4">
+        You have a fully loaded buddy team!
+      </h1>
+      <p className="text-lg text-gray-700 mb-6">
+        Unable to capture a new Pokémon. 
+        Please free one of your buddies before roaming again.
+      </p>
+      <button
+        onClick={() => navigate("/profile")}
+        className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition"
+      >
+        Go to Profile
+      </button>
+    </div>
+  );
+}
+
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-green-200 p-2">

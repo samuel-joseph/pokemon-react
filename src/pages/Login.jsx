@@ -10,7 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const { setName, name, trophies, setTrophies } = useTeam();
+  const { setName, name, trophies, setTrophies, setNumberOfBuddies } = useTeam();
   const [showStarter, setShowStarter] = useState(false);
 
   const handleLogin = async (e) => {
@@ -20,6 +20,7 @@ const Login = () => {
       setMessage("Login successful!");
       const data = await getRecord(username);
       const buddy = await getBuddyPokemon(username);
+      setNumberOfBuddies(buddy.length);
       setName(username);
       setTrophies(data.record.length);
       if (!buddy || buddy.length === 0) setShowStarter(true);

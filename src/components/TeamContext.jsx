@@ -7,6 +7,7 @@ export const TeamContext = createContext();
 export const TeamProvider = ({ children }) => {
   const [name, setName] = useState("");
   const [trophies, setTrophies] = useState(0);
+  const [numberOfBuddies, setNumberOfBuddies] = useState(0);
   const [region, setRegion] = useState("");
   const [inventory, setInventory] = useState([]);
   const [team, setTeam] = useState([]);
@@ -130,6 +131,8 @@ export const TeamProvider = ({ children }) => {
         setTrophies,
         name,
         setName,
+        setNumberOfBuddies,
+        numberOfBuddies
       }}
     >
       {children}
