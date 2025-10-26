@@ -44,7 +44,7 @@ const App = () => {
 
   const checkToken = () => {
     const token = getToken();
-    if (token && name!="") {
+    if (token) {
       setIsLoggedIn(true)
     }
     else {

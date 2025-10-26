@@ -1065,15 +1065,24 @@ const handleSwapPokemon = async (idx) => {
 
         {/* Moveset */}
         <div className={`grid grid-cols-2 gap-4 w-full max-w-md mt-2 mb-4 ${movesEnabled && !showMegaPrompt ? "" : "hidden"}`}>
-          {currentPokemon?.moves?.map((move, idx) => (
-            <button
-              key={idx}
-              onClick={() => movesEnabled && handlePlayerAttack(move)}
-              className="bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              {move.name}
-            </button>
-          ))}
+          {currentPokemon?.moves?.map((move, idx) => {
+            const bgColor = typeColors[move.type] || "#E5E5E5"; // fallback gray
+
+            return(
+              <button
+                key={idx}
+                onClick={() => movesEnabled && handlePlayerAttack(move)}
+                style={{
+                  backgroundColor: bgColor,
+                  color: "#fff",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                }}
+              className="p-3 rounded-lg text-center transition-transform transform hover:scale-105"
+              >
+                {move.name}
+                </button>
+            )
+          })}
         </div>
         {/* Player Team Icons */}
         {allowSwap &&
