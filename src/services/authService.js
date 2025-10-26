@@ -2,7 +2,7 @@ const API_URL = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL
   : "http://localhost:3000";
 
-export const signup = async (username, password) => {
+export const signup = async (username, password, battleWon = false) => {
   const res = await fetch(`${API_URL}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-type": "application/json" },

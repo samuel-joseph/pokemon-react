@@ -4,6 +4,7 @@ import { login } from "../services/authService";
 import { useTeam } from "../components/TeamContext";
 import { getRecord } from "../services/recordService";
 import { getBuddyPokemon } from "../services/buddyService";
+import ChooseStarter from "../components/ChooseStarter";
 
 const Login = () => {
   const [username, setUsername] = useState("");

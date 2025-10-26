@@ -43,7 +43,7 @@ const BattleResult = ({ outcome }) => {
         if (regionExists) {
           await incrementRegionWin(name, region);
         } else {
-          await updateRecord(name, { region, pokemon, win: 1 });
+          await updateRecord(name, { region, win: 1 });
         }
 
         const index = regions.findIndex((r) => r === region);
@@ -56,7 +56,7 @@ const BattleResult = ({ outcome }) => {
       setTimeout(() => resetAndRedirect(), 5000);
     } else {
       setTimeout(() => {
-        navigate("/signup");
+        navigate("/signup", { state: { battleWon: true } });
       }, 5000);
     }
   };
@@ -77,8 +77,7 @@ const BattleResult = ({ outcome }) => {
         currentHP: p.hp,
       })) || []
     );
-
-    navigate("/region", { replace: true });
+    navigate("/signup");
   };
 
   return (

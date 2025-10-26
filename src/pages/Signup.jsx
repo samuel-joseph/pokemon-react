@@ -16,6 +16,8 @@ const Signup = () => {
   const { team, inventory, setTrophies, setName } = useTeam();
   const navigate = useNavigate()
 
+  const { battleWon } = location.state || {};
+
   useEffect(() => {
     const timer = setTimeout(() => setShowForm(true), 2000);
     return () => clearTimeout(timer);
@@ -25,7 +27,7 @@ const Signup = () => {
     e.preventDefault();
     try {
       // Signup API call
-      const res = await signup(username, password);
+      const res = await signup(username, password, battleWon);
       setMessage(res.message || "Signup successful!");
       setToken(res.token);
 
