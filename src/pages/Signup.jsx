@@ -27,33 +27,40 @@ const Signup = () => {
   }, []);
 
   const handleSignup = async (e) => {
-    e.preventDefault();
-    try {
-      // Signup API call
-      const res = await signup(username, password, battleWon);
-      setMessage(res.message || "Signup successful!");
-      setToken(res.token);
+  e.preventDefault();
+  try {
+    // Signup API call
+    const res = await signup(username, password, battleWon);
+    setMessage(res.message || "Signup successful!");
+    setToken(res.token);
 
-      // Fetch record
-      const data = await getRecord(username);
-      setName(data.name);
-      setTrophies(data.record.length);
+    // Determine the region for the win record
+    const battleRegion = location.state?.region || "kanto"; // fallback to Kanto
 
-      // Check if user already has a buddy Pokémon
-      const buddyData = await getBuddyPokemon(username);
-
-      if (!buddyData || buddyData.length === 0) {
-        // Render ChooseStarter component instead of navigating
-        setShowStarter(true);
-      } else {
-        // Buddy exists, you can render home/dashboard or redirect
-        setMessage("Buddy found! Redirecting to home...");
-        // Optionally, you can add navigate("/") here if you want to redirect
-      }
-    } catch (error) {
-      setMessage(error.message);
+    // If user won a battle before signup, create their record
+    if (battleWon) {
+      await updateRecord(username, { record: { region: battleRegion.toLowerCase(), win: 1 } });
     }
-  };
+
+    // Fetch record
+    const data = await getRecord(username);
+    setName(data.name);
+    setTrophies(data.record.length);
+
+    // Check if user already has a buddy Pokémon
+    const buddyData = await getBuddyPokemon(username);
+
+    if (!buddyData || buddyData.length === 0) {
+      setShowStarter(true);
+    } else {
+      setMessage("Buddy found! Redirecting to home...");
+      navigate("/"); // redirect after signup
+    }
+  } catch (error) {
+    setMessage(error.message);
+  }
+};
+
 
   if (showStarter) {
     return <ChooseStarter />;

@@ -47,7 +47,7 @@ const BattleResult = ({ outcome }) => {
     } else {
       // Not logged in, redirect to signup
       setTimeout(() => {
-        navigate("/signup", { state: { battleWon: true } });
+        navigate("/signup", { state: { battleWon: true, region } });
       }, 5000);
     }
   };
