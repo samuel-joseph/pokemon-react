@@ -5,6 +5,7 @@ import { useTeam } from "../components/TeamContext";
 import { getRecord } from "../services/recordService";
 import { getBuddyPokemon } from "../services/buddyService";
 import ChooseStarter from "../components/ChooseStarter";
+import { useLocation } from "react-router-dom";
 
 
 const Signup = () => {
@@ -16,7 +17,9 @@ const Signup = () => {
   const { team, inventory, setTrophies, setName } = useTeam();
   const navigate = useNavigate()
 
-  const { battleWon } = location.state || {};
+  const location = useLocation();
+  const battleWon = location.state?.battleWon;
+
 
   useEffect(() => {
     const timer = setTimeout(() => setShowForm(true), 2000);

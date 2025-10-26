@@ -16,8 +16,10 @@ export const getRecord = async (name) => {
   const token = authService.getToken();
   const response = await fetch(`${API_URL}/api/record/${name}`, {
     method: "GET",
-    "Content-Type": "application/json",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
   const data = await response.json();
   return data;
@@ -48,7 +50,7 @@ export const updateRecord = async (name, { record }) => {
   }
 };
 
-export const incrementRegionWin = async ({ name, region }) => {
+export const incrementRegionWin = async (name, region) => {
   const token = authService.getToken();
   try {
     const res = await fetch(`${API_URL}/api/record/${name}/update/${region}`, {

@@ -30,22 +30,12 @@ const BattleResult = ({ outcome }) => {
   // 🏆 Handle winning logic
   const handleWin = async () => {
     const token = getToken();
-    if (token && name !== "") {
+    if (token && name) {
       try {
-        const response = await getRecord(name);
-        const regionExists = response.record.some(
-          (r) => r.region.toLowerCase() === region.toLowerCase()
-        );
+        // Backend handles both increment and creation
+        await incrementRegionWin(name, region);
 
-        // Keep current team as the "surviving" Pokémon
-        const pokemon = team;
-
-        if (regionExists) {
-          await incrementRegionWin(name, region);
-        } else {
-          await updateRecord(name, { region, win: 1 });
-        }
-
+        // Update trophy if needed
         const index = regions.findIndex((r) => r === region);
         if (trophy !== index + 1) addTrophy();
 
@@ -55,11 +45,13 @@ const BattleResult = ({ outcome }) => {
 
       setTimeout(() => resetAndRedirect(), 5000);
     } else {
+      // Not logged in, redirect to signup
       setTimeout(() => {
         navigate("/signup", { state: { battleWon: true } });
       }, 5000);
     }
   };
+
 
   const handleLoss = () => {
     setTimeout(() => resetAndRedirect(), 5000);
@@ -77,7 +69,9 @@ const BattleResult = ({ outcome }) => {
         currentHP: p.hp,
       })) || []
     );
-    navigate("/signup");
+    if(getToken())
+      navigate("/");
+    else navigate("/signup")
   };
 
   return (

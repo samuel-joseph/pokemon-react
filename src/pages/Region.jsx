@@ -11,7 +11,11 @@ function Region() {
     navigate(`/region/${region.toLowerCase()}`);
   };
 
-  const unlockedRegions = regions.slice(0, trophies + 1);
+  const unlockedRegions = regions
+  .map((region, index) => ({ name: region, unlocked: index <= trophies }))
+  .filter(region => region.unlocked); // <-- only keep unlocked ones
+
+
   const lastUnlockedRegion = unlockedRegions[unlockedRegions.length - 1];
 
   return (
@@ -27,27 +31,23 @@ function Region() {
       </h1>
 
       <div className="flex flex-col justify-center w-1/2 gap-4">
-        {unlockedRegions.map((region) => {
-          const isLast = region === lastUnlockedRegion;
-          return (
-            <button
-              key={region}
-              onClick={() => handleRegionClick(region)}
-              onMouseEnter={() => setActiveRegion(region)}
-              onMouseLeave={() => setActiveRegion(null)}
-              className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-500
-                ${
-                  isLast
-                    ? "bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 animate-gradient text-white hover:scale-105"
-                    : "bg-white text-red-600 hover:bg-red-200"
-                }
-                ${activeRegion === region ? "scale-105" : ""}
-              `}
-            >
-              {region}
-            </button>
-          );
-        })}
+        {unlockedRegions.map((region) => (
+          <button
+            key={region.name}
+            onClick={() => handleRegionClick(region.name)}
+            onMouseEnter={() => setActiveRegion(region.name)}
+            onMouseLeave={() => setActiveRegion(null)}
+            className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-500
+              ${region.name === unlockedRegions[unlockedRegions.length - 1].name
+                ? "bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 animate-gradient text-white hover:scale-105"
+                : "bg-white text-red-600 hover:bg-red-200"
+              }
+              ${activeRegion === region.name ? "scale-105" : ""}
+            `}
+          >
+            {region.name}
+          </button>
+        ))}
       </div>
 
       {/* Gradient animation keyframes */}
