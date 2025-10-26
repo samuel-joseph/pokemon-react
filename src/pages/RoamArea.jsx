@@ -6,12 +6,15 @@ import up from "../assets/trainer-up.png";
 import left from "../assets/trainer-left.png";
 import right from "../assets/trainer-right.png";
 import { fetchPokemons } from "../services/pokemonService";
+import { useTeam } from "../components/TeamContext";
+import { getToken } from "../services/authService";
 
 export default function RoamArea() {
   const [position, setPosition] = useState({ x: 2, y: 2 });
   const [direction, setDirection] = useState("down"); // trainer facing
   const [gridSize] = useState(7); // smaller grid for mobile
   const [pokemons, setPokemons] = useState([]);
+  const { name } = useTeam();
 
   const navigate = useNavigate();
 
@@ -25,6 +28,12 @@ export default function RoamArea() {
   }
 
   useEffect(() => {
+
+    const isUserLoggedIn = () => {
+      const token = getToken()
+      if (name === "" || !token) navigate("/login");
+    }
+
     const getPokemons = async () => {
       try {
         const data = await fetchPokemons();
@@ -49,7 +58,7 @@ export default function RoamArea() {
         console.error("Error fetching Pokémons:", error);
       }
     };
-
+    isUserLoggedIn();
     getPokemons();
   }, [gridSize]);
 
