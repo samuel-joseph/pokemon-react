@@ -42,3 +42,27 @@ export const getBuddyPokemon = async (username) => {
     return [];
   }
 };
+
+export const editBuddyPokemonList = async (username, updatedList) => {
+  const token = getToken();
+  if (!token || !username) throw new Error("User not logged in");
+
+  try {
+    const res = await fetch(`${API_URL}/api/buddy/${username}/pokemon`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedList),
+    });
+
+    if (!res.ok) throw new Error("Failed to update buddy Pokémon");
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Failed to update buddy Pokémon:", err);
+    throw err;
+  }
+};

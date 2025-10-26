@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TeamSelection from "../components/TeamSelection";
 import Battle from "../components/Battle";
 import BattleResult from "../components/BattleResult";
@@ -9,7 +9,9 @@ const Stadium = () => {
   const [outcome, setOutcome] = useState(null);
   
   // ✅ Hook must be inside the component body
-  const { npc, inventory } = useTeam();
+  const { npc, inventory, setTeam } = useTeam();
+
+  useEffect(()=>setTeam([]),[])
 
   const renderStage = () => {
     // ✅ Fallback check — if missing data, redirect to default

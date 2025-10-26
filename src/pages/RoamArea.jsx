@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import bush from "../assets/bush.png";
 import down from "../assets/trainer-down.png";
 import up from "../assets/trainer-up.png";
@@ -11,6 +12,8 @@ export default function RoamArea() {
   const [direction, setDirection] = useState("down"); // trainer facing
   const [gridSize] = useState(7); // smaller grid for mobile
   const [pokemons, setPokemons] = useState([]);
+
+  const navigate = useNavigate();
 
   function shuffleArray(array) {
     const shuffled = [...array];
@@ -105,12 +108,24 @@ export default function RoamArea() {
     (p) => p.position.x === position.x && p.position.y === position.y
   );
 
+  useEffect(() => {
+    if (encounteredPokemon) {
+        navigate("/catch", { state: { pokemon: encounteredPokemon } });
+    }
+  }, [encounteredPokemon, navigate]);
+
   // Dynamic cell size for mobile screens
   const cellSize = `min(12vw, 60px)`;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-green-200 p-2">
       {/* World Grid */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+      >
+        ← Back
+      </button>
       <div
         className="relative border-4 border-green-700"
         style={{
@@ -171,19 +186,42 @@ export default function RoamArea() {
         })}
       </div>
 
-      {/* Encounter message */}
-      {encounteredPokemon && (
-        <div className="mt-3 text-lg font-bold text-red-600 text-center">
-          You found a {encounteredPokemon.name}!
-        </div>
-      )}
-
       {/* Mobile Controls */}
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <button className="col-start-2 bg-yellow-400 p-3 rounded-xl" onClick={() => move("up")}>↑</button>
-        <button className="bg-yellow-400 p-3 rounded-xl" onClick={() => move("left")}>←</button>
-        <button className="bg-yellow-400 p-3 rounded-xl" onClick={() => move("down")}>↓</button>
-        <button className="bg-yellow-400 p-3 rounded-xl" onClick={() => move("right")}>→</button>
+      <div className="relative w-32 h-32 mt-4">
+        {/* Up */}
+        <button
+          className="absolute top-0 left-1/2 -translate-x-1/2 bg-yellow-400 p-3 rounded-xl"
+          onClick={() => move("up")}
+        >
+          ↑
+        </button>
+
+        {/* Down */}
+        <button
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-yellow-400 p-3 rounded-xl"
+          onClick={() => move("down")}
+        >
+          ↓
+        </button>
+
+        {/* Left */}
+        <button
+          className="absolute left-0 top-1/2 -translate-y-1/2 bg-yellow-400 p-3 rounded-xl"
+          onClick={() => move("left")}
+        >
+          ←
+        </button>
+
+        {/* Right */}
+        <button
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-400 p-3 rounded-xl"
+          onClick={() => move("right")}
+        >
+          →
+        </button>
+
+        {/* Optional center button or just empty space */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-300 rounded-full"></div>
       </div>
     </div>
   );

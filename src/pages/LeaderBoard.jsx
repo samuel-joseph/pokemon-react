@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { getAllRecord } from "../services/recordService";
+import { useNavigate } from "react-router-dom";
 
 const Leaderboard = () => {
   const [leaderboards, setLeaderboards] = useState([]);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
 useEffect(() => {
   const fetchLeaderboard = async () => {
@@ -37,6 +40,12 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 py-10 px-4">
+      <button
+        onClick={() => navigate("/")}
+        className="top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+      >
+        ← Back
+      </button>
       <div className="max-w-3xl mx-auto bg-white shadow-2xl rounded-2xl p-8">
         <h2 className="text-3xl font-bold text-center text-yellow-600 mb-8">
           🏆 Pokémon Champions Leaderboard 🏆
@@ -57,11 +66,11 @@ useEffect(() => {
               return (
                 <li
                   key={trainer.name}
-                  onClick={() =>
-                    setSelectedTrainer(
-                      selectedTrainer?.name === trainer.name ? null : trainer
-                    )
-                  }
+                  // onClick={() =>
+                  //   setSelectedTrainer(
+                  //     selectedTrainer?.name === trainer.name ? null : trainer
+                  //   )
+                  // }
                   className="py-4 px-2 hover:bg-yellow-50 transition duration-200 rounded-lg cursor-pointer"
                 >
                   <div className="flex justify-between items-center">

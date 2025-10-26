@@ -20,7 +20,7 @@ const Login = () => {
       setMessage("Login successful!");
       const data = await getRecord(username);
       const buddy = await getBuddyPokemon(username);
-      setName(data.name);
+      setName(username);
       setTrophies(data.record.length);
       if (!buddy || buddy.length === 0) setShowStarter(true);
       else navigate("/"); 

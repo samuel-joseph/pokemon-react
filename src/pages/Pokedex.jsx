@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchPokemons } from "../services/pokemonService";
+import { useNavigate } from "react-router-dom";
 import PokemonDetails from "./PokemonDetails";
 
 const Pokedex = () => { 
   const [pokemon, setPokemon] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
@@ -21,6 +23,12 @@ const Pokedex = () => {
   
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <button
+        onClick={() => navigate("/")}
+        className="top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+      >
+        ← Back
+      </button>
       <h1 className="text-3xl font-bold text-center text-red-600 mb-6">Pokédex</h1>
       
       <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">

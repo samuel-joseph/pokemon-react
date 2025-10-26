@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTeam } from "../components/TeamContext";
 import { regions } from "../helper/region";
-
 function Region() {
   const navigate = useNavigate();
   const { trophies, name } = useTeam();
@@ -17,6 +16,12 @@ function Region() {
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center justify-center">
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+      >
+        ← Back
+      </button>
       <h1 className="text-4xl font-bold text-red-600 mb-6 text-center">
         Regional Stadiums
       </h1>

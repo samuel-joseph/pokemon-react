@@ -18,6 +18,7 @@ import LoadingScreen from "./components/LoadingScreen"
 import MainContent from "./components/MainContent";
 import RoamArea from "./pages/RoamArea";
 import ChooseStarter from "./components/ChooseStarter";
+import CatchingPokemon from "./pages/CatchingPokemon";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -43,7 +44,7 @@ const App = () => {
 
   const checkToken = () => {
     const token = getToken();
-    if (token) {
+    if (token && name!="") {
       setIsLoggedIn(true)
     }
     else {
@@ -67,14 +68,6 @@ const App = () => {
 
       if (data?.length > 0) {
         setRank1(data[0].name);
-
-        // Extract all Pokémon IDs across all users and all their records
-        // const allPokemonIds = data.flatMap((user) =>
-        //   user.record.flatMap((r) =>
-        //     r.pokemon.map((p) => p.id)
-        //   )
-        // );
-        // Remove duplicates (optional)
         const uniquePokemonIds = generateRandomPokemonIds();
 
         setPokemons(uniquePokemonIds)
@@ -191,7 +184,8 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
 
           <Route path="/explore" element={<RoamArea />} />
-          <Route path="/choose-starter" element={<ChooseStarter />} />
+          <Route path="/catch" element={<CatchingPokemon />} />
+          {/* <Route path="/choose-starter" element={<ChooseStarter />} /> */}
         </Routes>
       </main>
     </Router>

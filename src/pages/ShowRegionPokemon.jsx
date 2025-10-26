@@ -8,11 +8,12 @@ import { getBuddyPokemon } from "../services/buddyService";
 function ShowRegionPokemon() {
   const { regionName } = useParams();
   const [pokemon, setPokemon] = useState([]);
+  const [buddyPokemons, setBuddyPokemons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
 
-  const { inventory, addInventory, setRegion, setNpc, setNpcTeam, setInventory, name, setName } = useTeam();
+  const { inventory, addInventory, setRegion, setNpc, setNpcTeam, setInventory, name } = useTeam();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,21 +22,21 @@ function ShowRegionPokemon() {
     setInventory([]);
     setNpc([]);
     setNpcTeam([]);
+
     async function fetchData() {
       setLoading(true);
       try {
-        let buddyPokemons = [];
+        let buddyPokemonsData = [];
         if (name && name !== "") {
-          buddyPokemons = await getBuddyPokemon(name);
+          buddyPokemonsData = await getBuddyPokemon(name);
+          setBuddyPokemons(buddyPokemonsData);
         }
 
-        const pokemons = await fetchRegionPokemons(regionName);
-        const npc = await fetchNpc(regionName);
+        const pokemonsData = await fetchRegionPokemons(regionName);
+        const npcData = await fetchNpc(regionName);
 
-        setNpc(npc);
-        setPokemon([...buddyPokemons,...pokemons]);
-        // optionally, you can do something with buddyPokemons
-        // setBuddyPokemons(buddyPokemons) if you have a state for it
+        setNpc(npcData);
+        setPokemon(pokemonsData);
       } catch (error) {
         console.error("Error fetching Pokémons:", error);
       } finally {
@@ -43,6 +44,7 @@ function ShowRegionPokemon() {
         setRegion(regionName);
       }
     }
+
     fetchData();
   }, [regionName, name, showInstructions]);
 
@@ -64,7 +66,6 @@ function ShowRegionPokemon() {
     setShowInstructions(false);
   };
 
-  // 2️⃣ Show instructions after name entered
   if (showInstructions) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-50">
@@ -83,7 +84,6 @@ function ShowRegionPokemon() {
     );
   }
 
-  // 3️⃣ Pokémon details screen
   if (selectedPokemon) {
     return (
       <PokemonDetails
@@ -94,38 +94,74 @@ function ShowRegionPokemon() {
     );
   }
 
-  // 4️⃣ Pokémon selection screen
   return (
     <div className="p-6 max-w-6xl mx-auto overflow-y-auto overscroll-none">
       <h1 className="text-3xl font-bold text-center text-red-600 mb-6">
-        {regionName.charAt(0).toUpperCase() + regionName.slice(1)} Pokémons
+        {regionName.charAt(0).toUpperCase() + regionName.slice(1)} Region
       </h1>
 
       {loading ? (
         <p className="text-center text-gray-600">Loading Pokémon...</p>
-      ) : availablePokemon.length === 0 ? (
-        <p className="text-center text-gray-500">
-          All Pokémon from this region are already in your team!
-        </p>
       ) : (
-        <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {availablePokemon.map((poke, index) => (
-            <li
-              key={index}
-              className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer"
-              onClick={() => setSelectedPokemon(poke)}
-            >
-              <img
-                src={poke.image}
-                alt={poke.name}
-                className="w-20 h-20 object-contain mb-2"
-              />
-              <span className="text-gray-700 font-semibold text-center">
-                #{poke.id} {poke.name}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          {/* 🧢 Trainer’s Captured Pokémon */}
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
+            Your Pokémon
+          </h2>
+          {buddyPokemons.length > 0 ? (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-10">
+              {buddyPokemons.map((poke, index) => (
+                <li
+                  key={`buddy-${index}`}
+                  className="bg-yellow-100 rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer"
+                  onClick={() => setSelectedPokemon(poke)}
+                >
+                  <img
+                    src={poke.image}
+                    alt={poke.name}
+                    className="w-20 h-20 object-contain mb-2"
+                  />
+                  <span className="text-gray-700 font-semibold text-center">
+                    #{poke.id} {poke.name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center text-gray-500 mb-10">
+              You haven’t caught any Pokémon yet.
+            </p>
+          )}
+
+          {/* 🌿 Wild Pokémon */}
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
+            Region Pokémon
+          </h2>
+          {availablePokemon.length > 0 ? (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {availablePokemon.map((poke, index) => (
+                <li
+                  key={`wild-${index}`}
+                  className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer"
+                  onClick={() => setSelectedPokemon(poke)}
+                >
+                  <img
+                    src={poke.image}
+                    alt={poke.name}
+                    className="w-20 h-20 object-contain mb-2"
+                  />
+                  <span className="text-gray-700 font-semibold text-center">
+                    #{poke.id} {poke.name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center text-gray-500">
+              No more wild Pokémon available in this region.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
