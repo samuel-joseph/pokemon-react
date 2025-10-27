@@ -39,13 +39,17 @@ export default function CatchingPokemon() {
   const throwPokeball = async () => {
     if (isThrowing || pokeballs <= 0) return;
 
-    const catchRate =
+    const throwModifier = (6 - pokeball) * .02
+    let baseRate = compounding+
       pokemon.base_experience >= 300
         ? 0.05
         : pokemon.base_experience >= 200
         ? 0.15
         : 0.55;
-
+      
+    let catchRate = baseRate + throwModifier;
+    catchRate = Math.min(Math.max(catchRate, 0.05), 0.95);
+    
     setIsThrowing(true);
     setMessage("Throwing Pokéball...");
 
