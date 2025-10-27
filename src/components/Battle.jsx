@@ -228,8 +228,13 @@ const calculateDamage = (attacker, defender, move) => {
   if (!move || move.power == null) return { damage: 0, effectiveness: "normal" };
 
   let hits = 1;
+
+  // Add special case for Greninja Ash's Water Shuriken
+  const bonus_min = attacker.name === "Greninja Ash" && move.name.toLowerCase() === "water-shuriken" ? 1 : 0;
+
   if (move.max_hits && move.min_hits) {
-    hits = Math.floor(Math.random() * (move.max_hits - move.min_hits + 1)) + move.min_hits;
+    const minHits = move.min_hits + bonus_min;
+    hits = Math.floor(Math.random() * (move.max_hits - minHits + 1)) + minHits;
   }
 
   // Determine which stats to use
