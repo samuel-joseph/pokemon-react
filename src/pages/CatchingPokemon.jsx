@@ -39,8 +39,8 @@ export default function CatchingPokemon() {
   const throwPokeball = async () => {
     if (isThrowing || pokeballs <= 0) return;
 
-    const throwModifier = (6 - pokeball) * .02
-    let baseRate = compounding+
+    const throwModifier = (6 - pokeballs) * .02
+    let baseRate = throwModifier +
       pokemon.base_experience >= 300
         ? 0.05
         : pokemon.base_experience >= 200
