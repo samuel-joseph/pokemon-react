@@ -66,6 +66,11 @@ function ShowRegionPokemon() {
     setShowInstructions(false);
   };
 
+  const availableBuddyPokemons = buddyPokemons.filter(
+  (poke) => !inventory.some((t) => t.id === poke.id)
+);
+
+
   if (showInstructions) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-50">
@@ -105,33 +110,34 @@ function ShowRegionPokemon() {
       ) : (
         <>
           {/* 🧢 Trainer’s Captured Pokémon */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
-            Your Pokémon
-          </h2>
-          {buddyPokemons.length > 0 ? (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-10">
-              {buddyPokemons.map((poke, index) => (
-                <li
-                  key={`buddy-${index}`}
-                  className="bg-yellow-100 rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer"
-                  onClick={() => setSelectedPokemon(poke)}
-                >
-                  <img
-                    src={poke.image}
-                    alt={poke.name}
-                    className="w-20 h-20 object-contain mb-2"
-                  />
-                  <span className="text-gray-700 font-semibold text-center">
-                    #{poke.id} {poke.name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-center text-gray-500 mb-10">
-              You haven’t caught any Pokémon yet.
-            </p>
-          )}
+        {/* 🧢 Trainer’s Captured Pokémon */}
+        <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
+          Your Pokémon
+        </h2>
+        {availableBuddyPokemons.length > 0 ? (
+          <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-10">
+            {availableBuddyPokemons.map((poke, index) => (
+              <li
+                key={`buddy-${index}`}
+                className="bg-yellow-100 rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer"
+                onClick={() => setSelectedPokemon(poke)}
+              >
+                <img
+                  src={poke.image}
+                  alt={poke.name}
+                  className="w-20 h-20 object-contain mb-2"
+                />
+                <span className="text-gray-700 font-semibold text-center">
+                  #{poke.id} {poke.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-center text-gray-500 mb-10">
+            You haven’t caught any Pokémon yet.
+          </p>
+        )}
 
           {/* 🌿 Wild Pokémon */}
           <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">

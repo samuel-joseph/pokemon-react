@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"
 import { signup, setToken } from "../services/authService";
 import { useTeam } from "../components/TeamContext";
-import { getRecord } from "../services/recordService";
+import { getRecord, updateRecord, incrementRegionWin } from "../services/recordService";
 import { getBuddyPokemon } from "../services/buddyService";
 import ChooseStarter from "../components/ChooseStarter";
 import { useLocation } from "react-router-dom";
@@ -39,7 +39,7 @@ const Signup = () => {
 
     // If user won a battle before signup, create their record
     if (battleWon) {
-      await updateRecord(username, { record: { region: battleRegion.toLowerCase(), win: 1 } });
+      await incrementRegionWin(username, battleRegion.toLowerCase());
     }
 
     // Fetch record

@@ -143,11 +143,19 @@ const TeamSelection = ({ onNext }) => {
       {/* NPC Section */}
       {showNpc && npc && (
         <>
+          
           <div className="flex justify-center mb-8">
+          {team.length >= 3 ? (
+            <span className="bg-yellow-500 text-white text-xl font-bold px-6 py-2 rounded-full shadow-md animate-pulse">
+              Pokémon battle is about to start!
+            </span>
+          ) : (
             <span className="bg-red-500 text-white text-xl font-bold px-6 py-2 rounded-full shadow-md">
               VERSUS
             </span>
-          </div>
+          )}
+        </div>
+
 
           <div key={npc.region}>
             {npc && npc.gymLeaders.map((leader) => (
