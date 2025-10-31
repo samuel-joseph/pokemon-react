@@ -16,8 +16,10 @@ const PokemonDetails = ({ pokemon, onBack, onAdd }) => {
         ← Back
       </button>
 
-      <h1 className="text-3xl font-bold mb-4 capitalize">{pokemon.name}</h1>
-
+        <div className="flex flex-col items-center justify-center text-center">
+          <h1 className="text-3xl font-bold mb-2 capitalize">{pokemon.name}</h1>
+          <p>Level {pokemon.level}</p>
+        </div>
       {/* Toggle front/back sprite */}
       <img
         src={showBack ? pokemon.sprite_back : pokemon.sprite_front}

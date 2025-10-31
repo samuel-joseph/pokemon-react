@@ -109,8 +109,6 @@ function ShowRegionPokemon() {
         <p className="text-center text-gray-600">Loading Pokémon...</p>
       ) : (
         <>
-          {/* 🧢 Trainer’s Captured Pokémon */}
-        {/* 🧢 Trainer’s Captured Pokémon */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
           Your Pokémon
         </h2>

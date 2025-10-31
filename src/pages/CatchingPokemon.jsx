@@ -32,7 +32,20 @@ export default function CatchingPokemon() {
         top: `${35 + Math.random() * 30}%`,
         left: `${30 + Math.random() * 40}%`,
       });
+
+      const maxLevel =
+        pokemon.base_experience >= 300
+          ? 100
+          : pokemon.base_experience >= 200
+          ? 75
+          : 65;
+
+      const minLevel = 55;
+      const randomLevel = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+
+      pokemon.level = randomLevel;
     }, 2000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -92,6 +105,7 @@ export default function CatchingPokemon() {
       await new Promise((r) => setTimeout(r, 1000));
       try {
         setMessage("Adding to your profile...");
+        
         await addBuddyPokemon(pokemon, username);
         await new Promise((r) => setTimeout(r, 800));
         navigate("/profile", { state: { pokemon } });
