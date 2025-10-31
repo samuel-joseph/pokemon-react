@@ -10,7 +10,7 @@ import Stadium from "./pages/Stadium";
 import Profile from "./pages/Profile"
 import { Navigate } from "react-router-dom";
 import Leaderboard from "./pages/LeaderBoard";
-import { getToken, logout } from "./services/authService";
+import { getToken, logout, getUsername } from "./services/authService";
 import { useTeam } from "./components/TeamContext";
 import { getAllRecord } from "./services/recordService";
 import pokeballImg from "./assets/pokeball.png"
@@ -44,7 +44,9 @@ const App = () => {
 
   const checkToken = () => {
     const token = getToken();
-    if (token) {
+    const username = getUsername();
+    if (token && username) {
+      setName(username);
       setIsLoggedIn(true)
     }
     else {

@@ -34,6 +34,7 @@ export const login = async (username, password) => {
 
   if (res.ok && data.token) {
     setToken(data.token);
+    setUsername(data.username);
   } else {
     throw new Error(data.message || "Login failed");
   }
@@ -45,6 +46,12 @@ export const logout = () => localStorage.clear();
 
 export const getToken = () => localStorage.getItem("token");
 
+export const getUsername = () => localStorage.getItem("username");
+
 export const setToken = (token) => {
   localStorage.setItem("token", token);
+};
+
+export const setUsername = (username) => {
+  localStorage.setItem("username", username);
 };
