@@ -113,6 +113,8 @@ const CHARGING_MOVE_IDS = [
 };
   
   const [bgColor, setBgColor] = useState(getTimeGradient());
+  const [nextBg, setNextBg] = useState(null);
+  const [fade, setFade] = useState(false);
 
 useEffect(() => {
   const updateColor = () => setBgColor(getTimeGradient());
@@ -563,7 +565,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
     // Super-effective background flash
     if (effectiveness === "super effective") {
-      // changeBgColor(move.type);
+      changeBgColor(move.type);
     }
 
     await handleNarration(
@@ -920,16 +922,43 @@ const handleSwapPokemon = async (idx) => {
 
 
     // Animate background change
-  const changeBgColor = (type) => {
-    const color = typeColors[type] || bgColor;
-    setBgColor(color);
+  // const changeBgColor = (type) => {
+  //   const color = typeColors[type] || bgColor;
+  //   setBgColor(color);
 
-    // revert back after 2 seconds
+  //   // revert back after 2 seconds
+  //   setTimeout(() => {
+  //     setBgColor(bgColor);
+  //   }, BG_COLOR_TIME);
+  // };
+
+
+const changeBgColor = (type) => {
+  const original = bgColor; // save current gradient
+  const newColor = typeColors[type] || original;
+
+  setNextBg(newColor);
+  setFade(true);
+
+  // Fade in the new gradient
+  setTimeout(() => {
+    setBgColor(newColor); // set new gradient
+    setNextBg(null);
+    setFade(false);
+  }, BG_COLOR_TIME); // duration of fade
+
+  // Revert back to original after BG_COLOR_TIME
+  setTimeout(() => {
+    setNextBg(original);
+    setFade(true);
+
     setTimeout(() => {
-      setBgColor(bgColor);
-    }, BG_COLOR_TIME);
-  };
-
+      setBgColor(original);
+      setNextBg(null);
+      setFade(false);
+    }, 500);
+  }, BG_COLOR_TIME);
+};
 
   const handleUserMegaEvolve = async () => {
   try {
@@ -976,10 +1005,30 @@ const handleSwapPokemon = async (idx) => {
     <div
       className="flex flex-col h-screen relative items-center"
     style={{
-      background: `${bgColor}`,
+      background: bgColor,
       backgroundSize: "cover",
-      transition: "background 2s ease-in-out",
-    }}>
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      transition: "opacity 0.5s ease-in-out",
+      }}>
+        {nextBg && (
+          <div
+            style={{
+              background: nextBg,
+              backgroundSize: "cover",
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              opacity: fade ? 1 : 0,
+              transition: "opacity 0.5s ease-in-out",
+            }}
+          />
+        )}
       
 
       {showMegaAnimation && (
