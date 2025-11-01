@@ -565,7 +565,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
     // Super-effective background flash
     if (effectiveness === "super effective") {
-      changeBgColor(move.type);
+      // changeBgColor(move.type);
     }
 
     await handleNarration(
