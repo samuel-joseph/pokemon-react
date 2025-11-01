@@ -40,7 +40,7 @@ export default function CatchingPokemon() {
           ? 75
           : 65;
 
-      const minLevel = 55;
+      const minLevel = 60;
       const randomLevel = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
 
       pokemon.level = randomLevel;
