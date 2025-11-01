@@ -28,13 +28,19 @@ export const addBuddyPokemon = async (pokemon, username) => {
 };
 
 export const getBuddyPokemon = async (username) => {
+  const token = getToken();
   try {
     // check if user already has a buddy pokemon
-    const res = await fetch(`${API_URL}/api/buddy/${username}`);
+    const res = await fetch(`${API_URL}/api/buddy/${username}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
     if (!res.ok) throw new Error("Failed to fetch buddy");
 
     const data = await res.json();
-    console.log(data);
     // return the buddy Pokémon list or an empty array if none
     return data.pokemon || [];
   } catch (err) {

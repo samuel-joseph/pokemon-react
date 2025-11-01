@@ -8,6 +8,7 @@ import { speakEleven, speakSynthesis } from "../services/ttsService";
 import { typeColors } from "../helper/typeColor";
 import BattleMessage from "./BattleMessage";
 import Mega from "./Mega";
+import { calculateHP } from "../helper/calculateHP.jsx";
 
 
 
@@ -160,8 +161,8 @@ const CHARGING_MOVE_IDS = [
         copy[0] = {
           ...copy[0], // keep existing properties like level, moves, status, etc.
           name: megaForm.mega_name,
-          currentHP: megaForm.currentHP,
-          maxHP: megaForm.maxHP,
+          currentHP: calculateHP(megaForm.stats[0].base, currentNpc.level),
+          maxHP: calculateHP(megaForm.stats[0].base, currentNpc.level),
           sprite_back: megaForm.sprite_back,
           sprite_front: megaForm.sprite_front,
           stats: megaForm.stats,
@@ -921,8 +922,8 @@ const handleSwapPokemon = async (idx) => {
       copy[0] = {
         ...copy[0],
         name: newData.mega_name,
-        currentHP: Math.max(newData.currentHP - reduceHp, 0),
-        maxHP: newData.maxHP,
+        currentHP: Math.max(calculateHP(newData.stats[0].base,currentPokemon.level) - reduceHp, 0),
+        maxHP: calculateHP(newData.stats[0].base, currentPokemon.level),
         sprite_back: newData.sprite_back,
         sprite_front: newData.sprite_front,
         stats: newData.stats,
