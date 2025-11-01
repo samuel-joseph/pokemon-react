@@ -956,7 +956,7 @@ const changeBgColor = (type) => {
       setBgColor(original);
       setNextBg(null);
       setFade(false);
-    }, 500);
+    }, BG_COLOR_TIME);
   }, BG_COLOR_TIME);
 };
 
