@@ -9,6 +9,7 @@ import { typeColors } from "../helper/typeColor";
 import BattleMessage from "./BattleMessage";
 import Mega from "./Mega";
 import { calculateHP } from "../helper/calculateHP.jsx";
+import groundImage from "../assets/battle-background.png";
 
 
 
@@ -18,7 +19,7 @@ const Battle = ({ onNext, mode = "stadium" }) => {
   const [npcChargeMove, setNpcChargeMove] = useState(null);
   const [playerChargeMove, setPlayerChargeMove] = useState(null);
 
-  const [bgColor, setBgColor] = useState("#FFFFFF");
+  // const [bgColor, setBgColor] = useState("#FFFFFF");
   const [movesEnabled, setMovesEnabled] = useState(true);
   const [npcAttacking, setNpcAttacking] = useState(false);
   const [isTeamHit, setIsTeamHit] = useState(false);
@@ -94,6 +95,32 @@ const CHARGING_MOVE_IDS = [
   //   playRoar(true);
   //   setTimeout(()=> playRoar(false),5000)
   // },[])
+
+
+
+  const getTimeGradient = () => {
+  const hour = new Date().getHours();
+
+  if (hour >= 6 && hour < 12) {
+    return "linear-gradient(to bottom, #FFEE88, #88C3FF)"; // Morning
+  } else if (hour >= 12 && hour < 17) {
+    return "linear-gradient(to bottom, #4FACFE, #00F2FE)"; // Noon
+  } else if (hour >= 17 && hour < 20) {
+    return "linear-gradient(to bottom, #FE9365, #FEB47B)"; // Sunset
+  } else {
+    return "linear-gradient(to bottom, #1E3C72, #2A5298)"; // Night
+  }
+};
+  
+  const [bgColor, setBgColor] = useState(getTimeGradient());
+
+useEffect(() => {
+  const updateColor = () => setBgColor(getTimeGradient());
+  updateColor();
+
+  const interval = setInterval(updateColor, 300000); // Update every 5 minutes
+  return () => clearInterval(interval);
+}, []);
 
   const unlockAudio = () => {
     if (audioUnlocked) return;
@@ -536,7 +563,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
 
     // Super-effective background flash
     if (effectiveness === "super effective") {
-      changeBgColor(move.type);
+      // changeBgColor(move.type);
     }
 
     await handleNarration(
@@ -894,12 +921,12 @@ const handleSwapPokemon = async (idx) => {
 
     // Animate background change
   const changeBgColor = (type) => {
-    const color = typeColors[type] || "#FFFFFF";
+    const color = typeColors[type] || bgColor;
     setBgColor(color);
 
     // revert back after 2 seconds
     setTimeout(() => {
-      setBgColor("#FFFFFF");
+      setBgColor(bgColor);
     }, BG_COLOR_TIME);
   };
 
@@ -948,10 +975,11 @@ const handleSwapPokemon = async (idx) => {
   return (
     <div
       className="flex flex-col h-screen relative items-center"
-      style={{
-        backgroundColor: bgColor,
-        transition: "background-color 2s ease-in-out",
-      }}>
+    style={{
+      background: `${bgColor}`,
+      backgroundSize: "cover",
+      transition: "background 2s ease-in-out",
+    }}>
       
 
       {showMegaAnimation && (
@@ -1010,7 +1038,7 @@ const handleSwapPokemon = async (idx) => {
           <motion.img
             src={currentNpc?.sprite_front}
             alt={currentNpc?.name}
-            className={`object-contain ${
+            className={`relative w-[180px] object-contain ${
               currentNpc?.name.toLowerCase().includes("mega") ||
               currentNpc?.name.toLowerCase().includes("ash")
                 ? "w-48 h-48 sm:w-56 sm:h-56"
@@ -1019,6 +1047,7 @@ const handleSwapPokemon = async (idx) => {
             style={{
               opacity: npcHit ? 0.25 : 1,
               transition: "opacity 0.1s ease-in-out",
+              zIndex: 2 
             }}
             animate={{
               x: npcAttacking ? -50 : 0,
@@ -1030,6 +1059,12 @@ const handleSwapPokemon = async (idx) => {
               y: { duration: 0.5 },
             }}
           />
+            <img
+              src={groundImage}
+              alt="ground"
+              className="absolute bottom-0 w-[250px]"
+              style={{ zIndex: 1 }}
+            />
           {playerMoveFx && (
             <motion.img
               key="player-moveFx"
@@ -1037,6 +1072,7 @@ const handleSwapPokemon = async (idx) => {
               alt=" "
               className="absolute w-32 h-32 sm:w-40 sm:h-40 object-contain pointer-events-none"
               initial={{ opacity: 0, scale: 0.5 }}
+              style={{zIndex: 3}}
               animate={{
                 opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
                 scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
@@ -1065,6 +1101,7 @@ const handleSwapPokemon = async (idx) => {
                 opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
                 scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
               }}
+              style={{zIndex: 3}}
               transition={{
                 duration: 1.2,   // twice as long (original was 0.6)
                 delay: 0.2,
@@ -1072,7 +1109,27 @@ const handleSwapPokemon = async (idx) => {
               }}
             />
           )}
+                  <div className="relative flex items-center justify-center">
           <motion.img
+            src={currentPokemon?.sprite_back}
+            alt={currentPokemon?.name}
+            className={`object-contain ${
+              currentPokemon?.name.toLowerCase().includes("mega") ||
+              currentPokemon?.name.toLowerCase().includes("ash")
+                ? "w-56 h-56 sm:w-48 sm:h-48"
+                : "w-32 h-32 sm:w-40 sm:h-40"
+            }`}
+            style={{
+              opacity: isTeamHit ? 0.25 : 1,
+              transition: "opacity 0.1s ease-in-out",
+              zIndex: 2,
+            }}
+            animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
+            transition={{ opacity: { delay: 2, duration: 1 }, x: { duration: 0.5 }, y: { duration: 0.5 } }}
+          />
+          <img src={groundImage} alt="ground" className="absolute bottom-0 w-[250px]" style={{ zIndex: 1 }} />
+        </div>
+          {/* <motion.img
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
               className={`object-contain ${
@@ -1081,7 +1138,11 @@ const handleSwapPokemon = async (idx) => {
                 ? "w-56 h-56 sm:w-48 sm:h-48"
                 : "w-32 h-32 sm:w-40 sm:h-40"
             }`}
-            style={{ opacity: isTeamHit ? 0.25 : 1, transition: "opacity 0.1s ease-in-out" }}
+            style={{
+              opacity: isTeamHit ? 0.25 : 1,
+              transition: "opacity 0.1s ease-in-out",
+              zIndex: 2
+            }}
             animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
             transition={{
               opacity: { delay: 2, duration: 1 }, // 👈 delay the appearance by 1s
@@ -1089,6 +1150,12 @@ const handleSwapPokemon = async (idx) => {
               y: { duration: 0.5 },
             }}
           />
+            <img
+              src={groundImage}
+              alt="ground"
+              className="absolute bottom-0 w-[250px]"
+              style={{ zIndex: 1 }}
+            /> */}
           <div className="flex flex-col">
             <h3 className="text-lg font-bold mt-2">{currentPokemon?.name}</h3>
             <p>Level {currentPokemon?.level || 50}</p>
@@ -1184,7 +1251,7 @@ const handleSwapPokemon = async (idx) => {
 
 
         {!movesEnabled &&
-          <div className="w-half border-2 border-black bg-white text-black p-2 text-center text-sm font-mono whitespace-pre-line rounded-md">
+          <div className="flex-grow border-2 border-black bg-white text-black p-2 text-center text-sm font-mono whitespace-pre-line rounded-md">
             {battleMessage}
           </div>
         }
