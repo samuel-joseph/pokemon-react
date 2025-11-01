@@ -100,6 +100,7 @@ const ChooseStarter = () => {
   try {
     const pokemonWithMoves = {
       ...selected,
+      level: 85,
       moves: selectedMoves,
     };
 
