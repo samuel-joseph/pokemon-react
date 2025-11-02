@@ -476,8 +476,8 @@ const getAttackAnimation = (move, isPlayer) => {
   // Physical = aggressive dash
   if (move.damage_class === "physical") {
     return {
-      x: isPlayer ? 200 : -200, // move toward opponent
-      y: isPlayer ? -130 : 130,
+      x: isPlayer ? 100 : -100, // move toward opponent
+      y: isPlayer ? -110 : 120,
       duration: 0.3,
     };
   }
