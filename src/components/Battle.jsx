@@ -35,6 +35,11 @@ const Battle = ({ onNext, mode = "stadium" }) => {
   const [npcMoveFx, setNpcMoveFx] = useState(null);
 
 
+  const [playerCurrentMove, setPlayerCurrentMove] = useState(null);
+  const [npcCurrentMove, setNpcCurrentMove] = useState(null);
+
+
+
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [battleMessage, setBattleMessage] = useState("");
   
@@ -462,6 +467,35 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
   }
 };
 
+  
+  
+  
+const getAttackAnimation = (move, isPlayer) => {
+  if (!move?.damage_class) return {};
+
+  // Physical = aggressive dash
+  if (move.damage_class === "physical") {
+    return {
+      x: isPlayer ? 200 : -200, // move toward opponent
+      y: isPlayer ? -130 : 130,
+      duration: 0.3,
+    };
+  }
+
+  // Special = small float forward
+  if (move.damage_class === "special") {
+    return {
+      x: isPlayer ? 30 : -30,
+      y: isPlayer ? -20 : 20,
+      duration: 0.4,
+    };
+  }
+
+  // Status or none = no movement
+  return { x: 0, y: 0, duration: 0.2 };
+};
+
+
 
 
   const performAttack = async (attacker, defenderSide, move, attackerIsPlayer) => {
@@ -602,10 +636,13 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
       });
     }
 
+    const attackAnim = getAttackAnimation(move, attackerIsPlayer);
+    
     // --- Apply damage and animate ---
     if (attackerIsPlayer) {
       setPlayerMoveFx(getMoveFx(move.type));
       setPlayerAttacking(true);
+      await wait(attackAnim.duration * 1000);
       await wait(POKEMON_ATTACK_TIME);
       setPlayerAttacking(false);
       setPlayerMoveFx(null);
@@ -622,12 +659,12 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
         if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
         return copy;
       });
-      await wait(500)
+      await wait(1000)
       if (newHP <= 0) {
           setNpcTeam((prev) => prev.slice(1));
           setNpcHit(false)
           setAllowSwap(true);
-          await wait(500);
+          // await wait(500);
           // playRoar(currentNpc.cries?.latest);
           playRoar(false)
         return true
@@ -636,6 +673,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     } else {
       setNpcMoveFx(getMoveFx(move.type));
       setNpcAttacking(true);
+      await wait(attackAnim.duration * 1000);
       await wait(POKEMON_ATTACK_TIME);
       setNpcAttacking(false);
       setNpcMoveFx(null)
@@ -658,7 +696,7 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
           setTeam((prev) => prev.slice(1));
           setIsTeamHit(false)
           setAllowSwap(true);
-          await wait(500);
+          // await wait(500);
         // playRoar(currentPokemon.cries?.latest); 
         playRoar(true)
         return true
@@ -679,6 +717,9 @@ const applyStatusBuffMove = async (attacker, defender, move, attackerIsPlayer) =
     let playerFainted = false;
     const playerStatus = processStatusEffects(currentPokemon, true);
     const npcStatus = processStatusEffects(currentNpc, false);
+
+    setPlayerCurrentMove(playerMove);
+    setNpcCurrentMove(npcMove);
 
     // If fainted from poison/burn etc., handle faint
     if (playerStatus.fainted) {
@@ -1098,10 +1139,11 @@ const changeBgColor = (type) => {
               transition: "opacity 0.1s ease-in-out",
               zIndex: 2 
             }}
-            animate={{
-              x: npcAttacking ? -50 : 0,
-              y: npcAttacking ? 50 : 0,
-            }}
+            animate={
+              npcAttacking
+                ? getAttackAnimation(npcCurrentMove, false)
+                : { x: 0, y: 0 }
+            }
             transition={{
               opacity: { delay: 4, duration: 0.5 },
               x: { duration: 0.5 },
@@ -1121,15 +1163,15 @@ const changeBgColor = (type) => {
               alt=" "
               className="absolute w-32 h-32 sm:w-40 sm:h-40 object-contain pointer-events-none"
               initial={{ opacity: 0, scale: 0.5 }}
-              style={{zIndex: 3}}
               animate={{
-                opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
-                scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
+                opacity: [0, 1, 0.6, 1, 0.7, 1, 0.5, 1, 0.8, 0], // more extended flicker
+                scale: [0.5, 1.3, 1, 1.4, 1.1, 1.3, 1, 1.2, 1, 1] // more dynamic impact
               }}
+              style={{ zIndex: 3 }}
               transition={{
-                duration: 1.2,   // twice as long (original was 0.6)
+                duration: 2.4,       // double the previous extended duration
                 delay: 0.2,
-                times: [0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1] // spread keyframes over longer duration
+                times: [0, 0.1, 0.2, 0.35, 0.5, 0.6, 0.7, 0.85, 0.95, 1] // spread keyframes evenly
               }}
             />
           )}
@@ -1147,14 +1189,14 @@ const changeBgColor = (type) => {
               className="absolute w-32 h-32 sm:w-40 sm:h-40 object-contain pointer-events-none"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{
-                opacity: [0, 1, 0.5, 1, 0.8, 0.6, 1, 0], // extended flicker
-                scale: [0.5, 1.2, 1, 1.3, 1.1, 1.2, 1, 1] // extended impact
+                opacity: [0, 1, 0.6, 1, 0.7, 1, 0.5, 1, 0.8, 0], // more extended flicker
+                scale: [0.5, 1.3, 1, 1.4, 1.1, 1.3, 1, 1.2, 1, 1] // more dynamic impact
               }}
-              style={{zIndex: 3}}
+              style={{ zIndex: 3 }}
               transition={{
-                duration: 1.2,   // twice as long (original was 0.6)
+                duration: 2.4,       // double the previous extended duration
                 delay: 0.2,
-                times: [0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1] // spread keyframes over longer duration
+                times: [0, 0.1, 0.2, 0.35, 0.5, 0.6, 0.7, 0.85, 0.95, 1] // spread keyframes evenly
               }}
             />
           )}
@@ -1173,7 +1215,11 @@ const changeBgColor = (type) => {
               transition: "opacity 0.1s ease-in-out",
               zIndex: 2,
             }}
-            animate={playerAttacking ? { x: 50, y: -50 } : { x: 0, y: 0 }}
+            animate={
+              playerAttacking
+                ? getAttackAnimation(playerCurrentMove, true)
+                : { x: 0, y: 0 }
+            }
             transition={{ opacity: { delay: 2, duration: 1 }, x: { duration: 0.5 }, y: { duration: 0.5 } }}
           />
           <img src={groundImage} alt="ground" className="absolute bottom-0 w-[250px]" style={{ zIndex: 1 }} />
