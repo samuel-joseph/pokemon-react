@@ -31,17 +31,12 @@ export const TeamProvider = ({ children }) => {
           setName(res.name);
 
           // calculate trophies (sum of wins)
-          const totalWins = res.record.reduce((sum, r) => sum + (r.win || 0), 0);
+          const totalWins = res.record.length;
           setTrophies(totalWins);
 
           // use the most recent region (or default first one)
           setRegion(res.record[res.record.length - 1].region || "");
-        } else {
-          setName("");
-          setTrophies(0);
-          setRegion("");
-        }
-        console.log(`trophy ${trophies} name is ${name} region is ${region}`)
+        } 
       } catch (err) {
         console.error("Failed to fetch record:", err);
         setName("");
