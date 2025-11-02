@@ -15,12 +15,25 @@ function Region() {
 
   useEffect(() => {
     const getWins = async () => {
-      const recordResponse = await getRecord(getUsername());
-      return recordResponse.record.length;
+      const username = getUsername();
+      if (!username) return 0;
+      try {
+        const res = await getRecord(username);
+        if (res && res.record) {
+          return res.record.length;
+        }
+      } catch (err) {
+        console.error("Error fetching record for wins:", err);
+      }
+      return 0;
     }
+
     if (trophies === 0) {
-      setTrophies(getWins());
-    }
+      (async () => { 
+        const wins = await getWins();
+        setTrophies(wins);
+      })()
+     }
   }, [trophies]);
 
   const unlockedRegions = regions
