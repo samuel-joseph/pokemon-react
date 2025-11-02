@@ -16,8 +16,6 @@ function Region() {
   .filter(region => region.unlocked); // <-- only keep unlocked ones
 
 
-  const lastUnlockedRegion = unlockedRegions[unlockedRegions.length - 1];
-
   return (
     <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center justify-center">
       <button
