@@ -74,20 +74,33 @@ export default function RoamArea() {
 
 
   // Movement function
+// Movement function
   const handleMovement = (dx, dy) => {
     setPosition((prev) => {
-      const newX = Math.min(gridSize - 1, Math.max(0, prev.x + dx));
-      const newY = Math.min(gridSize - 1, Math.max(0, prev.y + dy));
+      const targetX = prev.x + dx;
+      const targetY = prev.y + dy;
 
-      // update direction
+      // If movement goes out of bounds → refresh page
+      if (
+        targetX < 0 ||
+        targetY < 0 ||
+        targetX > gridSize - 1 ||
+        targetY > gridSize - 1
+      ) {
+        window.location.reload();
+        return prev; // prevent changing state further
+      }
+
+      // Otherwise update direction + allow movement
       if (dx === -1) setDirection("left");
       if (dx === 1) setDirection("right");
       if (dy === -1) setDirection("up");
       if (dy === 1) setDirection("down");
 
-      return { x: newX, y: newY };
+      return { x: targetX, y: targetY };
     });
   };
+
 
   // Keyboard movement
   useEffect(() => {
