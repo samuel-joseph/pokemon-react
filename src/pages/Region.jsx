@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTeam } from "../components/TeamContext";
 import { regions } from "../helper/region";
+import { getRecord } from "../services/recordService";
+import { getUsername } from "../services/authService";
 function Region() {
   const navigate = useNavigate();
-  const { trophies, name } = useTeam();
+  const { trophies, setTrophies } = useTeam();
   const [activeRegion, setActiveRegion] = useState(null);
 
   const handleRegionClick = (region) => {
     navigate(`/region/${region.toLowerCase()}`);
   };
+
+  useEffect(() => {
+    const getWins = async () => {
+      const recordResponse = await getRecord(getUsername());
+      return recordResponse.record.length;
+    }
+    if (trophies === 0) {
+      setTrophies(getWins());
+    }
+  }, [trophies]);
 
   const unlockedRegions = regions
   .map((region, index) => ({ name: region, unlocked: index <= trophies }))
