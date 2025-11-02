@@ -113,13 +113,14 @@ const handleSave = async () => {
                 key={`${pokemon.id}-${index}`}
                 className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center hover:scale-105 transition-transform relative"
               >
-                {/* Remove Button */}
+                {index !== 0 && (
                 <button
                   onClick={() => handleRemove(pokemon.name)}
                   className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600"
                 >
                   ❌
                 </button>
+              )}
 
                 <img
                   src={pokemon.sprite_front}
