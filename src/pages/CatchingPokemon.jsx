@@ -8,7 +8,7 @@ export default function CatchingPokemon() {
   const location = useLocation();
   const navigate = useNavigate();
   const pokemon = location.state?.pokemon;
-  const { name } = useTeam();
+  const { name, trophies } = useTeam();
 
   if (!pokemon) {
     navigate("/roam");
@@ -37,10 +37,16 @@ export default function CatchingPokemon() {
         pokemon.base_experience >= 300
           ? 100
           : pokemon.base_experience >= 200
-          ? 75
-          : 65;
+          ? 95
+          : 88;
 
-      const minLevel = 60;
+      const minLevel = trophies >= 7 ? 85
+        : trophies >= 6 ? 80
+          : trophies >= 5 ? 75
+            : trophies >= 4 ? 70
+              : trophies >= 3 ? 65
+                : 60
+      
       const randomLevel = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
 
       pokemon.level = randomLevel;
