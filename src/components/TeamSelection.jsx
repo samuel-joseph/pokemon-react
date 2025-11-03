@@ -43,7 +43,7 @@ const TeamSelection = ({ onNext }) => {
         const finalBoss = npcPokemon.pop();
 
         // randomly add NPCs until 4 slots are filled
-        while (npcPokemon.length > 3) {
+        while (npcPokemon.length > 0 && npcTeam.length < 3) {
           const randomIndex = Math.floor(Math.random() * npcPokemon.length);
           const chosen = npcPokemon.splice(randomIndex, 1)[0];
           addNpcTeam(chosen);
