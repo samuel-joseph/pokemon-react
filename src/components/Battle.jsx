@@ -55,12 +55,12 @@ const Battle = ({ onNext, mode = "stadium" }) => {
   const currentNpc = npcTeam[0];
   const reserveNpc = npcTeam.slice(1);
 
-  const HIDE_MOVE_TIMER = 2000; 
-  const INBETWEEN_HIT_TIME = 1000;
-  const POKEMON_ATTACK_TIME = 2000;
-  const BG_COLOR_TIME = 2000;
-  const FAINTED_DELAY = 1000;
-  const MESSAGE_DELAY = 1500;
+  const HIDE_MOVE_TIMER = 1500; 
+  const INBETWEEN_HIT_TIME = 500;
+  const POKEMON_ATTACK_TIME = 1500;
+  const BG_COLOR_TIME = 1500;
+  const FAINTED_DELAY = 500;
+  const MESSAGE_DELAY = 1000;
 
   // const HIDE_MOVE_TIMER = 50; 
   // const INBETWEEN_HIT_TIME = 50;  
@@ -652,11 +652,11 @@ const getAttackAnimation = (move, isPlayer) => {
       setNpcHit(newHP<=0);
 
       setNpcDamage(damage);
-      await wait(500);
+      await wait(1000);
       setNpcDamage(null);
       setNpcTeam((prev) => {
         const copy = [...prev];
-        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: Math.max(newHP,0) };
         return copy;
       });
       await wait(1000)
@@ -683,11 +683,11 @@ const getAttackAnimation = (move, isPlayer) => {
       setIsTeamHit(newHP<=0);
 
       setPlayerDamage(damage);
-      await wait(1000);
+      // await wait(1000);
       setPlayerDamage(null);
       setTeam((prev) => {
         const copy = [...prev];
-        if (copy[0]) copy[0] = { ...copy[0], currentHP: newHP };
+        if (copy[0]) copy[0] = { ...copy[0], currentHP: Math.max(newHP,0) };
         return copy;
       });
       await wait(1000)
