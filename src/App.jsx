@@ -32,53 +32,55 @@ const App = () => {
 
   
   useEffect(() => {
+
   
     const checkServer = async () => {
-    try {
-      const res = await fetch(`${API_URL}/healthz`);
-      if (res.ok) setServerReady(true);
-    } catch (err) {
-      console.error("Server not ready yet...");
-    }
-  };
-
-  const checkToken = () => {
-    const token = getToken();
-    const username = getUsername();
-    if (token && username) {
-      setName(username);
-      setIsLoggedIn(true)
-    }
-    else {
-      setIsLoggedIn(false)
-      logout()
-    }
-  };
-    
-  const generateRandomPokemonIds = () => {
-    const ids = new Set();
-    while (ids.size < 20) {
-      ids.add(Math.floor(Math.random() * 649) + 1);
-    }
-    return Array.from(ids);
-  };
-
-
-    const getRankOne = async () => {
-    try {
-      const data = await getAllRecord();
-
-      if (data?.length > 0) {
-        setRank1(data[0].name);
-        const uniquePokemonIds = generateRandomPokemonIds();
-
-        setPokemons(uniquePokemonIds)
-        console.log("PokemonId ",uniquePokemonIds)
+    if (name || serverReady) return;
+      try {
+        const res = await fetch(`${API_URL}/healthz`);
+        if (res.ok) setServerReady(true);
+      } catch (err) {
+        console.error("Server not ready yet...");
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
+
+    const checkToken = () => {
+      const token = getToken();
+      const username = getUsername();
+      if (token && username) {
+        setName(username);
+        setIsLoggedIn(true)
+      }
+      else {
+        setIsLoggedIn(false)
+        logout()
+      }
+    };
+    
+    const generateRandomPokemonIds = () => {
+      const ids = new Set();
+      while (ids.size < 20) {
+        ids.add(Math.floor(Math.random() * 649) + 1);
+      }
+      return Array.from(ids);
+    };
+
+
+      const getRankOne = async () => {
+      try {
+        const data = await getAllRecord();
+
+        if (data?.length > 0) {
+          setRank1(data[0].name);
+          const uniquePokemonIds = generateRandomPokemonIds();
+
+          setPokemons(uniquePokemonIds)
+          console.log("PokemonId ",uniquePokemonIds)
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
   // Run immediately
     checkToken();
@@ -97,7 +99,7 @@ const App = () => {
     window.removeEventListener("storage", checkToken);
     clearInterval(interval);
   };
-}, [name]); // Add `name` as dependency so it sees latest name
+}, [name, serverReady]); 
 
 
   if (!serverReady) {
