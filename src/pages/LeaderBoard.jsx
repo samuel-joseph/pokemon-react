@@ -84,7 +84,7 @@ useEffect(() => {
                     </div>
 
                     <span className="text-gray-500 font-medium text-sm">
-                      {"🏆".repeat(totalWins)}
+                      {totalWins}
                     </span>
                   </div>
 
