@@ -1128,10 +1128,12 @@ const changeBgColor = (type) => {
           <motion.img
             src={currentNpc?.sprite_front}
             alt={currentNpc?.name}
-            className={`relative w-[180px] object-contain ${
+            className={`relative object-contain ${
               currentNpc?.name.toLowerCase().includes("mega") ||
               currentNpc?.name.toLowerCase().includes("ash")
                 ? "w-48 h-48 sm:w-56 sm:h-56"
+                : currentNpc?.name.toLowerCase().includes("gigantmax")
+                ? "w-72 h-72 sm:w-64 sm:h-64"
                 : "w-32 h-32 sm:w-40 sm:h-40"
             }`}
             style={{
@@ -1205,11 +1207,11 @@ const changeBgColor = (type) => {
             src={currentPokemon?.sprite_back}
             alt={currentPokemon?.name}
             className={`object-contain ${
-              currentPokemon?.name.toLowerCase().includes("mega") ||
-              currentPokemon?.name.toLowerCase().includes("ash")
-                ? "w-56 h-56 sm:w-48 sm:h-48"
-                : "w-32 h-32 sm:w-40 sm:h-40"
-            }`}
+              currentPokemon?.name.toLowerCase().includes("mega") ?
+                "w-56 h-56 sm:w-48 sm:h-48" :
+              currentPokemon?.name.toLowerCase().includes("ash") ?
+                "w-40 h-40 sm:w-32 sm:h-32" : "w-32 h-32 sm:w-40 sm:h-40"
+              }`}
             style={{
               opacity: isTeamHit ? 0.25 : 1,
               transition: "opacity 0.1s ease-in-out",
